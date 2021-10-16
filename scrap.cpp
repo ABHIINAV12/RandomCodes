@@ -3148,3 +3148,1902 @@ int main() {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------
+
+//problem :  Chef and Wedding Arrangements
+
+while(t--){
+    ll n,k;cin>>n>>k;
+    ll f[n+1]; for(int i=1;i<=n;i++) cin>>f[i];
+    ll dp[n+1]; dp[0]=0;
+    for(int i=1;i<=n;i++) {
+          dp[i]=dp[i-1]+k;
+          map<int,int>mp; int clash=0;
+          for(int j=i;j>=1;j--){
+            mp[f[j]]++;
+            if(mp[f[j]]==2) clash+=2;
+            else if(mp[f[j]]>2) clash+=1;
+             dp[i] = min( dp[i], dp[j-1]+ k+clash); 
+          }
+     }
+     cout << dp[n] << '\n';  
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+//problem :  Chef and String
+
+int solve(string s){
+    int n=s.length();
+    string pre="CHEF";
+    int ans=0;
+    vector<vector<int>> dp(n+1,vector<int>(5,0));
+    for(int i=1;i<=n;i++){
+        for(int j=1;j<5;j++){
+            if(s[i-1]==pre[j-1]){
+                if(j==1)
+                    dp[i][j]=dp[i-1][j]+1;
+                else{
+                    dp[i][j]=min(dp[i-1][j-1],dp[i-1][j]+1);
+                }
+                
+            }else{
+                dp[i][j]=dp[i-1][j];
+            }
+        }
+    }
+    return dp[n][4];
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+//problem :  Sherlock and the Grid
+
+signed main(){
+    ios_base::sync_with_stdio(false);cin.tie(NULL);cout.tie(NULL);
+    int t;
+    cin>>t;
+    while(t--){
+        int n;
+        cin>>n;
+
+        char mat[n][n];
+        for(int i=0;i<n;i++)
+            for(int j=0;j<n;j++)
+                cin>>mat[i][j];
+        bool left[n][n],up[n][n];
+        for(int i=0;i<n;i++){
+            for(int j=n-1;j>=0;j--){
+                if(j==n-1){
+                    if(mat[i][j]=='#')
+                        left[i][j]=0;
+                    else
+                        left[i][j]=1;
+                }
+                else{
+                    if(mat[i][j]=='#')
+                        left[i][j]=0;
+                    else
+                        left[i][j]=left[i][j+1];
+                }
+            }
+        }
+        for(int i=n-1;i>=0;i--){
+            for(int j=0;j<n;j++){
+                if(i==n-1){
+                    if(mat[i][j]=='#')
+                        up[i][j]=0;
+                    else
+                        up[i][j]=1;
+                }
+                else{
+                    if(mat[i][j]=='#')
+                        up[i][j]=0;
+                    else
+                        up[i][j]=up[i+1][j];
+                }
+            }
+        }
+        int sol=0;
+        for(int i=0;i<n;i++){
+            for(int j=0;j<n;j++){
+                if(left[i][j] && up[i][j])
+                    sol++;
+            }
+        }
+        cout<<sol<<endl;
+    }
+    
+return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : z function, prefix function
+
+vector<int> z_function(string s){
+    int n = s.size();
+    vector<int> z(n,0);
+    for(int i=1, l=0, r=0; i<n; ++i){
+        if(i<=r) 
+            z[i] = min(r-i+1,z[i-l]);
+        while(i + z[i] < n && s[z[i]] == s[i + z[i]])
+            ++z[i];
+        if(i + z[i] - 1 > r)
+            l = i, r = i + z[i] - 1;
+    }
+    return z;
+}
+
+vector<int> prefix_function(string s){
+    int n = s.size();
+    vector<int> pi(n,0);
+    for(int i=1; i<n; ++i){
+        int j = pi[i-1];
+        while(j > 0 && s[i] != s[j]) 
+            j = pi[j-1];
+        if(s[i] == s[j]) 
+            ++j;
+        pi[i] = j;
+    }
+    return pi;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Atcoder : Security Camera
+
+#include<bits/stdc++.h>
+#define ll long long
+using namespace std;
+const int N=42;
+int n,m;
+ll g[N];
+map<ll,ll>f[N][2];
+int main()
+{
+    //freopen("1.in","r",stdin);
+    scanf("%d%d",&n,&m);
+    for(int i=1;i<=m;++i) 
+    {
+        int x,y;scanf("%d%d",&x,&y);
+        x--;y--;
+        if(x>y) swap(x,y);
+        g[x]|=1ll<<y;
+    }
+    f[0][0][0]=1;// Select 0 point, all points to be deleted because of not selected are 0, which is an even number.
+    f[0][0][g[0]]++;// Do not select 0 point, the point pointed to by 0 is 1 because the side to be deleted is not selected.
+    for(int i=0;i<n-1;++i)
+    {
+        for(int j=0;j<2;++j)//Enumerate the parity of the current number of deleted edges.
+        {
+            for(auto x:f[i][j]) // Enumerate all the states of the upper layer, and perform a push-and-grind transfer.
+            {
+                ll bit=(x.first&(1ll<<i+1))?1:0;// Make sure because i does not select the parity of the edge to be deleted.
+                f[i+1][j][x.first^(bit<<(i+1))]+=x.second;
+                // Select point i, and the number of edges deleted for all points (points after i) will not change because of not being selected. And the state of j remains unchanged.
+                f[i+1][j^bit][x.first^(bit<<(i+1))^g[i+1]]+=x.second; 
+                // If point i is not selected, the state of j is determined based on the current j and the number of edges to be deleted because i is not selected. 
+                // And after changing the point, the parity of the edge that was deleted because it was not selected.
+            }
+        }
+    }
+    ll ans=0;
+    for(auto x:f[n-1][m&1]) ans+=x.second;
+    printf("%lld",ans); 
+    return 0; 
+} 
+
+#include <bits/stdc++.h>
+using namespace std;
+
+const int N = 40;
+
+int n, m, dp[1 << 20];
+long long adj[N];
+
+int32_t main() {
+    ios_base::sync_with_stdio(0);
+    cin.tie(0);
+    cin >> n >> m;
+    for (int i = 0; i < m; i++) {
+        int u, v;
+        cin >> u >> v;
+        u--, v--;
+        adj[u] |= (1ll << v);
+        adj[v] |= (1ll << u);
+    }
+    for (int mask = 0; mask < (1 << min(n, 20)); mask++) {
+        int cur = 0, val = 0;
+        for (int i = 0; i < 20; i++)
+            if ((mask >> i) & 1) {
+                int tmp = adj[i] & ((1 << 20) - 1);
+                int c = __builtin_popcount(tmp) - __builtin_popcount(cur & tmp);
+                val ^= (c & 1);
+                cur |= (1 << i);
+            }
+        dp[mask] = val;
+    }
+    if (n <= 20) {
+        int res = 0;
+        for (int mask = 0; mask < (1 << n); mask++)
+            res += (dp[mask] == 0);
+        cout << res << '\n';
+        return 0;
+    }
+    for (int i = 0; i < 20; i++) {
+        for (int mask = 0; mask < (1 << 20); mask++) {
+            if ((mask >> i) & 1)
+                continue;
+            int n0 = dp[mask], n1 = dp[mask | (1 << i)];
+            dp[mask] = n0 + n1;
+            dp[mask | (1 << i)] = n0 - n1 + (1 << i);
+        }
+    }
+    long long res = 0;
+    for (int mask = 0; mask < (1 << (n - 20)); mask++) {
+        int maskDp = 0, cur = 0, val = 0;
+        for (int i = 20; i < n; i++)
+            if ((mask >> (i - 20)) & 1) {
+                int tmp = adj[i] >> 20;
+                int c = __builtin_popcount(tmp) - __builtin_popcount(cur & tmp);
+                val ^= (c & 1);
+                val ^= (__builtin_popcount(adj[i] & ((1 << 20) - 1)) & 1);
+                cur |= (1 << (i - 20));
+            }
+        for (int i = 0; i < 20; i++)
+            if (__builtin_popcount((adj[i] >> 20) & (mask ^ ((1 << (n - 20)) - 1))) & 1)
+                maskDp |= (1 << i);
+        res += (val? dp[maskDp] : (1 << 20) - dp[maskDp]);
+    }
+    cout << res << '\n';
+
+    return 0;
+}
+
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Codeforces :  The Strongest Build
+// focus this moment !!
+ 
+void solve(){
+    int n; cin>>n;
+    vi a[n]; vi c(n);
+    f(i,0,n){
+        cin>>c[i];
+        a[i].resize(c[i]);
+        f(j,0,c[i]) cin>>a[i][j];
+    }
+    set<vi> st; 
+    int m; cin>>m;
+    vi here; int x;
+    f(i,0,m) {
+        here.clear();
+        f(j,0,n) {
+            cin>>x; here.pb(x);
+        }
+        st.insert(here);
+    }
+    here.clear(); f(i,0,n) here.pb(c[i]);
+    vi ans; int sum = 0, mx = 0;
+    if(st.find(here)==st.end()) ans = here;
+    else {
+        for(auto it : st){
+             vi tmp = it;
+             f(i,0,n) if(tmp[i]==1) continue;
+             else {
+                 vi tmp1 = tmp; tmp1[i]--;
+                 if(st.find(tmp1)==st.end()){
+                    sum = 0; f(j,0,n) sum+= a[j][tmp1[j]-1];
+                    if(sum>mx){
+                        mx = sum;
+                        ans = tmp1;
+                    }   
+                 }
+             }
+        }
+    }
+    for(auto it : ans) cout<<it<<" "; cout<<"\n";
+}
+ 
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Codeforces : Say No to Palindromes
+
+void solve(){
+   int n,m; cin>>n>>m;
+   string s; cin>>s;
+   vvi here;
+   string t = "abc";
+   do{
+       vi pre; pre.pb(0);
+       f(i,0,n) pre.pb(s[i]!=t[i%3]);
+       here.pb(pre);
+   }while(next_permutation(all(t)));
+   f(i,0,6) f(j,1,n+1) here[i][j] += here[i][j-1];
+   f(i,0,m){
+       int l,r; cin>>l>>r;
+       int pr = mxn;
+       f(i,0,6) pr = min(pr,here[i][r]-here[i][l-1]);
+       cout<<pr<<"\n";
+   }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Fenwick Tree
+
+#include <bits/stdc++.h>
+using namespace std;
+#define ll long long 
+#define For(i,n) for(int i=0;i<n;i++)
+const long mxN =1e5+2 ;
+int n,q ,m[mxN];
+struct ft{
+  ll a[mxN]={};
+  void upd(int i,ll x){
+    for(;i<=mxN;i+=i&-i)
+      a[i]+=x ;
+  }
+  void upd1(int l,int r,ll x ){
+    upd(l,x);upd(r+1,-x) ;
+  }
+  ll qry(int i){
+    ll r=0 ;
+    for(;i;i-=i&-i)
+      r+=a[i] ;
+    return r ;
+  }
+}f;
+int main() {
+  cin >> n  ;
+  For(i,n){
+    cin >> m[i] ;
+    f.upd(i+1,m[i]) ;
+  }
+  cin >> q ;
+  while(q--){
+    int a,b,c;cin>> a >> b >> c ;
+    if(a){
+      int s = f.qry(c)-f.qry(b-1) ;
+      int x= c-b+1 ;
+      cout << (s+x-1)/x << endl ;
+    }else{
+      f.upd(b,c) ;
+    }
+  }
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : EDU 115 E
+
+/**
+ *    author:  tourist
+ *    created: 10.10.2021 12:18:01       
+**/
+#include <bits/stdc++.h>
+
+using namespace std;
+
+int main() {
+  ios::sync_with_stdio(false);
+  cin.tie(0);
+  int n, m, q;
+  cin >> n >> m >> q;
+  long long ans = 0;
+  for (int i = 0; i < n; i++) {
+    for (int j = 0; j < m; j++) {
+      ans += 1;
+      { // right
+        int nr = m - 1 - j;
+        int nd = n - 1 - i;
+        nr = min(nr, nd + 1);
+        nd = min(nd, nr);
+        ans += nr + nd;
+      }
+      { // down
+        int nr = m - 1 - j;
+        int nd = n - 1 - i;
+        nd = min(nd, nr + 1);
+        nr = min(nr, nd);
+        ans += nr + nd;
+      }
+    }
+  }
+  vector<vector<int>> a(n, vector<int>(m));
+  auto Go = [&](int i, int j, int di, int dj) {
+    int cc = 0;
+    while (true) {
+      i += di;
+      j += dj;
+      if (i < 0 || j < 0 || i >= n || j >= m || a[i][j] == 1) {
+        break;
+      }
+      cc += 1;
+      swap(di, dj);
+    }
+    return cc;
+  };
+  while (q--) {
+    int i, j;
+    cin >> i >> j;
+    --i; --j;
+    {
+      int x = Go(i, j, -1, 0);
+      int y = Go(i, j, 0, 1);
+      ans += (a[i][j] == 1 ? 1 : -1) * ((x + 1) * (y + 1) - 1);
+    }
+    {
+      int x = Go(i, j, 0, -1);
+      int y = Go(i, j, 1, 0);
+      ans += (a[i][j] == 1 ? 1 : -1) * ((x + 1) * (y + 1) - 1);
+    }
+    ans += (a[i][j] == 1 ? 1 : -1);
+    a[i][j] ^= 1;
+    cout << ans << '\n';
+  }
+  return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : EDU 115 F
+
+/**
+ *    author:  tourist
+ *    created: 10.10.2021 12:24:30       
+**/
+#include <bits/stdc++.h>
+
+using namespace std;
+
+int main() {
+  ios::sync_with_stdio(false);
+  cin.tie(0);
+  int n;
+  cin >> n;
+  vector<string> s(n);
+  vector<int> len(n);
+  vector<vector<vector<int>>> at(n);
+  vector<int> min_delta(n);
+  vector<int> delta(n);
+  for (int i = 0; i < n; i++) {
+    cin >> s[i];
+    len[i] = (int) s[i].size();
+    at[i].resize(2 * len[i] + 1);
+    int b = len[i];
+//    at[i][b].push_back(0);
+    for (int j = 0; j < len[i]; j++) {
+      b += (s[i][j] == '(' ? 1 : -1);
+      at[i][b].push_back(j + 1);
+      min_delta[i] = min(min_delta[i], b - len[i]);
+    }
+    delta[i] = b - len[i];
+  }
+  vector<int> dp(1 << n, -1);
+  dp[0] = 0;
+  int ans = 0;
+  for (int t = 0; t < (1 << n); t++) {
+    if (dp[t] == -1) {
+      continue;
+    }
+    int cur = 0;
+    for (int i = 0; i < n; i++) {
+      if (t & (1 << i)) {
+        cur += delta[i];
+      }
+    }
+    assert(cur >= 0);
+    for (int i = 0; i < n; i++) {
+      if (t & (1 << i)) {
+        continue;
+      }
+      int goal = len[i] - cur;
+      int ft = dp[t];
+      if (cur + min_delta[i] < 0) {
+        assert(goal > 0 && goal <= 2 * len[i]);
+        assert(!at[i][goal - 1].empty());
+        int bound = at[i][goal - 1][0];
+        ft += (int) (lower_bound(at[i][goal].begin(), at[i][goal].end(), bound) - at[i][goal].begin());
+        ans = max(ans, ft);
+        continue;
+      }
+      if (goal >= 0 && goal <= 2 * len[i]) {
+        ft += (int) at[i][goal].size();
+      }
+      dp[t | (1 << i)] = max(dp[t | (1 << i)], ft);
+    }
+  }
+  ans = max(ans, dp.back());
+  cout << ans << '\n';
+  return 0;
+}
+
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : EDU 115 G
+
+#include <algorithm>
+#include <string>
+#include <iostream>
+#include <vector>
+#include <array>
+#include <utility>
+
+std::vector<int> getSelfZ(const std::string& view) {
+    size_t n = view.length();
+    std::vector<int> selfZ(n);
+    selfZ[0] = n;
+    size_t right_bound = 1;
+    size_t offset = 0;
+    for (size_t i = 1; i < n; i++) {
+        if (i >= right_bound || selfZ[i - offset] + i >= right_bound) {
+            size_t start = std::max(i, right_bound);
+            for (; start < n && view[start] == view[start - i]; start++) {
+            }
+            selfZ[i] = start - i;
+            right_bound = start;
+            offset = i;
+        } else {
+            selfZ[i] = selfZ[i - offset];
+        }
+    }
+    return selfZ;
+}
+
+std::vector<int> getCommonZ(const std::string& view,
+                            const std::string& pattern,
+                            const std::vector<int>& patternZ,
+                            size_t maxn) {
+    size_t n = view.size();
+    size_t m = pattern.size();
+    size_t right_bound = 0;
+    size_t offset = 0;
+    std::vector<int> commonZ(maxn);
+    for (size_t i = 0; i < maxn; i++) {
+        if (i >= right_bound || patternZ[i - offset] + i >= right_bound) {
+            size_t start = std::max(i, right_bound);
+            for (; start < std::min(n, m + i) && view[start] == pattern[start - i]; start++) {
+            }
+            commonZ[i] = start - i;
+            right_bound = start;
+            offset = i;
+        } else {
+            commonZ[i] = patternZ[i - offset];
+        }
+    }
+    return commonZ;
+}
+
+std::vector<int> getCommonZ(const std::string& view,
+                            const std::string& pattern,
+                            const std::vector<int>& patternZ) {
+    return getCommonZ(view, pattern, patternZ, view.length());
+}
+
+const int NPrimes = 5;
+
+uint32_t rd() {
+    uint32_t res;
+#ifdef __MINGW32__
+    asm volatile("rdrand %0" :"=a"(res)::"cc");
+#else
+    res = std::random_device()();
+#endif
+    return res;
+}
+
+struct Solution {
+    std::string x;
+    std::string s;
+    std::vector<int> selfZ;
+    std::vector<int> commonZ;
+    std::array<uint32_t, NPrimes> primes;
+    std::array<std::vector<uint32_t>, NPrimes> hashes;
+    std::array<std::vector<uint32_t>, NPrimes> mults;
+    std::array<int, NPrimes> xHashes;
+
+    void genPrimes() {
+        for (int i = 0; i < NPrimes; i++) {
+            int init = (rd() >> 4) + 100000000;
+            int cur = init | 1;
+            bool good;
+            do {
+                good = true;
+                for (int j = 3; j * j <= cur; j++) {
+                    if (cur % j == 0) {
+                        cur += 2;
+                        good = false;
+                        break;
+                    }
+                }
+            } while (!good);
+            primes[i] = cur;
+        }
+    }
+
+    void genHashes() {
+        for (int i = 0; i < NPrimes; i++) {
+            std::vector<uint32_t>& hash = hashes[i];
+            std::vector<uint32_t>& mult = mults[i];
+            hash.resize(s.length() + 1);
+            mult.resize(s.length() + 1);
+            mult[0] = 1;
+            hash[0] = 0;
+            int p = primes[i];
+            for (int j = 0; j < s.length(); j++) {
+                hash[j + 1] = ((hash[j] * 10) + (s[j] - '0')) % p;
+                mult[j + 1] = (mult[j] * 10) % p;
+            }
+        }
+        for (int i = 0; i < NPrimes; i++) {
+            uint32_t cur = 0;
+            int p = primes[i];
+            for (int j = 0; j < x.length(); j++) {
+                cur = ((cur * 10) + (x[j] - '0')) % p;
+            }
+            xHashes[i] = cur;
+        }
+    }
+
+    int getHash(int idx, int from, int to) {
+        int res = (int) hashes[idx][to] - (int) (hashes[idx][from] * int64_t(mults[idx][to - from]) % primes[idx]);
+        if (res < 0) {
+            res += primes[idx];
+        }
+        return res;
+    }
+
+    std::vector<int> getNines(const std::string& s) {
+        std::vector<int> res(s.length());
+        int cur = 0;
+        for (int i = (int) s.length() - 1; i >= 0; i--) {
+            if (s[i] == '9') {
+                cur++;
+            } else {
+                cur = 0;
+            }
+            res[i] = cur;
+        }
+        return res;
+    }
+
+    void run(std::istream& in, std::ostream& out) {
+        in >> s >> x;
+        selfZ = getSelfZ(x);
+        commonZ = getCommonZ(s, x, selfZ);
+        genPrimes();
+        genHashes();
+        for (int i = 0; i + x.length() <= s.length(); i++) {
+            int z = commonZ[i];
+            if (z == x.length()) {
+                continue;
+            }
+            if (s[i + z] > x[z]) {
+                continue;
+            }
+            for (int blen = x.length() - z - 1; blen <= x.length() - z; blen++) {
+                if (i + x.length() + blen <= s.length()) {
+                    bool good = true;
+                    for (int j = 0; j < NPrimes; j++) {
+                        int aHash = getHash(j, i, i + x.length());
+                        int bHash = getHash(j, i + x.length(), i + x.length() + blen);
+                        int sumHash = aHash + bHash;
+                        if (sumHash >= primes[j]) {
+                            sumHash -= primes[j];
+                        }
+                        if (sumHash != xHashes[j]) {
+                            good = false;
+                            break;
+                        }
+                    }
+                    if (good) {
+                        out << i + 1 << " " << i + x.length() << "\n";
+                        out << i + x.length() + 1 << " " << i + x.length() + blen << "\n";
+                        return;
+                    }
+                }
+                if (blen <= i) {
+                    bool good = true;
+                    for (int j = 0; j < NPrimes; j++) {
+                        int aHash = getHash(j, i, i + x.length());
+                        int bHash = getHash(j, i - blen, i);
+                        int sumHash = aHash + bHash;
+                        if (sumHash >= primes[j]) {
+                            sumHash -= primes[j];
+                        }
+                        if (sumHash != xHashes[j]) {
+                            good = false;
+                            break;
+                        }
+                    }
+                    if (good) {
+                        out << i - blen + 1 << " " << i << "\n";
+                        out << i + 1 << " " << i + x.length() << "\n";
+                        return;
+                    }
+                }
+            }
+        }
+        if (x[0] != '1') {
+            out << "fail\n";
+            return;
+        }
+        int xZeros = 0;
+        std::vector<int> nines = getNines(s);
+        for (int i = 0; i + x.length() - 1 <= s.length(); i++) {
+            int blen = x.length() - 1;
+            if (i + x.length() - 1 + blen <= s.length()) {
+                bool good = true;
+                for (int j = 0; j < NPrimes; j++) {
+                    int aHash = getHash(j, i, i + x.length() - 1);
+                    int bHash = getHash(j, i + x.length() - 1, i + x.length() - 1 + blen);
+                    int sumHash = aHash + bHash;
+                    if (sumHash >= primes[j]) {
+                        sumHash -= primes[j];
+                    }
+                    if (sumHash != xHashes[j]) {
+                        good = false;
+                        break;
+                    }
+                }
+                if (good) {
+                    out << i + 1 << " " << i + x.length() - 1 << "\n";
+                    out << i + x.length() << " " << i + x.length() - 1 + blen << "\n";
+                    return;
+                }
+            }
+            if (blen <= i) {
+                bool good = true;
+                for (int j = 0; j < NPrimes; j++) {
+                    int aHash = getHash(j, i, i + x.length() - 1);
+                    int bHash = getHash(j, i - blen, i);
+                    int sumHash = aHash + bHash;
+                    if (sumHash >= primes[j]) {
+                        sumHash -= primes[j];
+                    }
+                    if (sumHash != xHashes[j]) {
+                        good = false;
+                        break;
+                    }
+                }
+                if (good) {
+                    out << i - blen + 1 << " " << i << "\n";
+                    out << i + 1 << " " << i + x.length() - 1 << "\n";
+                    return;
+                }
+            }
+        }
+    }
+};
+
+int main() {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(nullptr);
+    Solution().run(std::cin, std::cout);
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : Digit Removal  Codechef
+
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef pair<int,int> pii;
+typedef pair<ll,ll> pll;
+typedef vector<int> vi;
+typedef vector<ll> vl;
+#define RANGE(x) x.begin(),x.end()
+void one(){
+  int N,D;
+  cin>>N>>D;
+  vector<int> digs;
+  int M =N;
+  while(N>0){
+    digs.push_back(N%10);
+    N/=10;
+  }
+  int mind = D?0:1;
+  for(int i=digs.size()-1;i>=0;--i){
+    if(digs[i]==D){
+      ++digs[i];
+      if(D==9){
+        digs[i] = 0;
+        int j = i+1;
+        while(j<digs.size() && digs[j]==8){
+          digs[j] = 0;
+          ++j;
+        }
+        if(j==digs.size())digs.push_back(0);
+        ++digs[j];
+      }// move upward
+      --i;
+      while(i>=0){
+        digs[i] = mind;
+        --i;
+      }
+      break;
+    }
+  }
+  int res=0;
+  for(int j=digs.size()-1;j>=0;--j){
+    res=10*res+digs[j];
+  }
+  cout<<res-M<<'\n';
+}
+int main(){
+  std::ios_base::sync_with_stdio(false);
+  cin.tie(NULL);
+  int TC;
+  cin>>TC;
+  while(TC-->0){
+    one();
+  }
+  cout<<flush;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : Characteristic Polynomial Verification, Codechef
+
+#include<bits/stdc++.h>
+using namespace std;
+const int MOD = 998244353;
+typedef vector<int> vint;
+typedef vector<vector<int>> mat;
+#define LL long long
+LL seed = chrono::steady_clock::now().time_since_epoch().count();
+mt19937_64 rng(seed);
+#define rand(l, r) uniform_int_distribution<LL>(l, r)(rng)
+clock_t start = clock();
+mat operator+(mat a, mat b) {
+    int n = a.size(), m = a[0].size();
+    assert(b.size() == n && b[0].size() == m);
+    mat ret(n, vint(m, 0));
+    for (int i=0;i<n;++i) {
+        for (int j=0;j<m;++j) {
+            ret[i][j] = a[i][j] + b[i][j];
+            if (ret[i][j] >= MOD) ret[i][j] -= MOD;
+        }
+    }
+    return ret;
+}   
+mat operator*(mat a, mat b) {
+    int n = a.size(), m = a[0].size(), r = b[0].size();
+    assert(b.size() == m);
+    mat ret(n, vint(r, 0));
+    for (int i=0;i<n;++i) {
+        for (int j=0;j<r;++j) {
+            int res = 0;
+            for (int k=0;k<m;++k) {
+                res += (a[i][k] * 1LL * b[k][j]) % MOD;
+                if (res >= MOD) res -= MOD;
+            }
+            ret[i][j] = res;
+        }
+    }
+    return ret;
+}   
+mat operator*(mat a, int b) {
+    int n = a.size(), m = a[0].size();
+    mat ret(n, vint(m, 0));
+    for (int i=0;i<n;++i) {
+        for (int j=0;j<m;++j) {
+            ret[i][j] = (a[i][j] * 1LL * b) % MOD;
+        }
+    }
+    return ret;
+}   
+mat zero(int n) {
+    return mat(n, vint(n, 0));
+}
+mat eye(int n) {
+    mat ret = zero(n);
+    for (int i=0;i<n;++i) ret[i][i] = 1;
+    return ret;
+}
+int main() {
+    ios_base::sync_with_stdio(false);cin.tie(NULL);
+    int T;
+    cin >> T;
+    while (T--) {
+        int m;
+        cin >> m;
+        vint v(m);
+        for (int i=0;i<m;++i) cin >> v[i];
+        int n;
+        cin >> n;
+        mat A(n, vint(n, 0));
+        for (int i=0;i<n;++i) for (int j=0;j<n;++j) cin >> A[i][j];
+        bool ans = true;
+        int iter = 5;
+        while (iter--) {
+            mat X(n, vint(1, 0));
+            for (int i=0;i<n;++i) X[i][0] = (int)rand(0, MOD-1);
+            mat mul = X, ret(n, vint(1, 0));
+            for (int i=0;i<m;++i) {
+                ret = ret + (mul * v[i]);
+                mul = (A * mul);
+            }
+            for (int i=0;i<n;++i) {
+                if (ret[i][0] != 0) ans = false;
+            }
+        }
+        cout << (ans ? "yes\n" : "no\n");
+    }
+    cerr << fixed << setprecision(10);
+    cerr << (clock() - start) / ((long double)CLOCKS_PER_SEC) << " secs\n";
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem : Hidden Points, Codechef, Closest pair of points using merging.
+
+#include <bits/stdc++.h>
+using namespace std;
+
+#define sqr(x) ((x) * (x))
+typedef vector<int> VI;
+typedef long double LB;
+
+const LB INF = 2e18;
+const LB EPS = 1e-6;
+const int MX = 100007;
+
+int n, id[MX];
+VI v[2 * MX];
+
+struct point {
+    LB x; LB y;
+    point(LB x = 0.0, LB y = 0.0) : x(x), y(y) {}
+} PP[MX];
+
+template <typename T, typename U>
+inline void chkmin(T &a, U b) {
+    if (b < a) a = b;
+}
+
+template <typename T, typename U>
+inline void chkmax(T &a, U b) {
+    if (b > a) a = b;
+}
+
+LB dist(point &a, point &b) {
+    return sqrtl(sqr(a.x - b.x) + sqr(a.y - b.y));
+}
+
+bool cmpx(int a, int b) {
+    if (PP[a].x != PP[b].x) return PP[a].x < PP[b].x;
+    return PP[a].y < PP[b].y;
+}
+
+bool cmpy(int a, int b) {
+    if (PP[a].y != PP[b].y) return PP[a].y < PP[b].y;
+    return PP[a].x < PP[b].x;
+}
+
+void build(int u, int L, int R) {
+    v[u].clear();
+    for (int i = L; i <= R; i++) v[u].push_back(id[i]);
+    if (R - L <= 2) return;
+    int m = L + R >> 1;
+    build(u + u, L, m);
+    build(u + u + 1, m + 1, R);
+}
+
+void merge(VI &v1, VI &v2, VI &v) {
+    int i(0), k(0);
+    while (i < v1.size() || k < v2.size()) {
+        if (k == v2.size() || (i < v1.size() && PP[v1[i]].y <= PP[v2[k]].y)) v.push_back(v1[i++]);
+        else v.push_back(v2[k++]);
+    }
+}
+
+LB solve(int id, VI &Y) {
+    int i, k, cnt(v[id].size());
+    LB ans = INF;
+    if (cnt <= 3) {
+        for (i = 0; i < cnt; i++) Y.push_back(v[id][i]);
+        for (i = 0; i < v[id].size(); i++) for (k = i + 1; k < v[id].size(); k++) 
+            chkmin(ans, dist(PP[v[id][i]], PP[v[id][k]]));
+        sort(Y.begin(), Y.end(), cmpy);
+        return ans;
+    }
+    int mid = (v[id].size() - 1) / 2;
+    LB L = PP[v[id][mid]].x, d(INF);
+    VI y1, y2, YY;
+    chkmin(d, solve(id + id, y1));
+    chkmin(d, solve(id + id + 1, y2));
+    Y.clear();
+    merge(y1, y2, Y);
+    for (i = 0; i < Y.size(); i++) {
+        if ((LB)PP[Y[i]].x < L - d + EPS) continue;
+        if ((LB)PP[Y[i]].x > L + d - EPS) continue;
+        YY.push_back(Y[i]);
+    }
+    ans = min(ans, d);
+    sort(YY.begin(), YY.end(), cmpy);
+    for (i = 0; i < YY.size(); i++) {
+        for (k = i - 1; k >= 0 && PP[YY[i]].y < PP[YY[k]].y + d - EPS; k--) {
+            chkmin(ans, dist(PP[YY[i]], PP[YY[k]]));
+        }
+    }
+    return ans;
+}
+
+LB ask(int i, int j) {
+    if (i == j) return 0;
+    if (i > j) swap(i, j);
+    cout << "? " << i << " " << j << "\n"; cout.flush();
+    long long ans; cin >> ans;
+    return ans;
+}
+
+bool test(long long k , long long p , long long q){
+    long long tt = abs(p + q - k);
+    for (long long ll = 1e9 - 3; ll >= 1e9 - 100; ll--) { 
+        long long mm = tt % ll;
+        mm = (mm * mm) % ll;
+        long long nn = (4 * (p % ll) * (q % ll)) % ll;
+        if (mm != nn) return 0;
+    }
+    return 1;
+}
+
+int main() {
+    ios::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+    
+    int T; cin >> T;
+    while (T--){
+        cin >> n;
+        int stand = 0;
+        long long k = ask(1, 2);
+        PP[1].x = sqrtl(k);
+        bool flag = false;
+        if (n <= 3) {
+            long long p, q;
+            p = ask(1, 3);
+            q = ask(2, 3);
+            cout << "! " << min(k, min(p, q)) << "\n"; cout.flush();
+        } else {
+            for (int i = 2; i < n; i++) {
+                long long p, q;
+                p = ask(1, i + 1);
+                q = ask(2, i + 1);
+                if (test(k , p, q)) {
+                    if(k < q && p < q) PP[i].x = -sqrtl(p), PP[i].y = 0;
+                    else PP[i].x = sqrtl(p), PP[i].y = 0;
+                } else {
+                    if (flag == false) {
+                        flag = true;
+                        stand = i;
+                        LB tx = (LB)(p - q) / 2.0 / sqrtl(k);
+                        tx += sqrtl(k) / 2.0;
+                        LB ty = sqrtl((LB)p - sqr(tx));
+                        PP[i].x = tx;
+                        PP[i].y = ty;
+                    } else {
+                        LB tx = (LB)(p - q) / 2.0 / sqrtl(k);
+                        tx += sqrtl(k) / 2.0;
+                        LB ty = sqrtl((LB)p - sqr(tx));
+                        PP[i].x = tx;
+                        LB en = ask(stand + 1, i + 1);
+                        LB dis1 = sqr(tx - PP[stand].x) + sqr(ty - PP[stand].y);
+                        LB dis2 = sqr(tx - PP[stand].x) + sqr(ty + PP[stand].y);
+                        if (fabs(en - dis1) < fabs(en - dis2)) PP[i].y = ty;
+                        else PP[i].y = -ty;
+                    }
+                }
+            }
+//          for(int i = 0;i < n;i++) cout<<pos[i].x<<" "<<pos[i].y<<"\n";
+            for (int i = 0; i < n; i++) id[i] = i;
+            sort(id, id + n, cmpx);
+            build(1, 0, n - 1);
+            VI Y;
+            LB ans = sqr(solve(1, Y));
+            cout << "! " << (long long)(ans + 0.5) << "\n"; cout.flush();
+        }
+    }
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Stock Price Fluctuation, Leetcode
+
+class StockPrice {
+private:
+    multiset<int> s;
+    unordered_map<int, int> ts;
+    int lt = 0, lp = 0;
+    
+public:
+    StockPrice() {
+        
+    }
+    
+    void update(int timestamp, int price) {
+        if (ts.count(timestamp)) {
+            int p = ts[timestamp];
+            auto it = s.find(p);
+            s.erase(it);
+        }
+        ts[timestamp] = price;
+        s.insert(price);
+        if (timestamp >= lt) {
+            lt = timestamp;
+            lp = price;
+        }
+    }
+    
+    int current() {
+        return lp;
+    }
+    
+    int maximum() {
+        return *s.rbegin();
+    }
+    
+    int minimum() {
+        return *s.begin();
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Partition Array Into Two Arrays to Minimize Sum Difference, Leetcode
+
+class Solution {
+public:
+    int minimumDifference(vector<int>& nums) {
+        int n = nums.size() / 2;
+        vector<vector<int>> f(n + 1), g(n + 1);
+        for (int mask = 0; mask < (1 << n); ++mask) {
+            int sum = 0;
+            int cnt = __builtin_popcount(mask);
+            for (int i = 0; i < n; ++i) {
+                if (mask & (1 << i)) {
+                    sum += nums[i];
+                }
+                else {
+                    sum -= nums[i];
+                }
+            }
+            f[cnt].push_back(sum);
+        }
+        for (int mask = 0; mask < (1 << n); ++mask) {
+            int sum = 0;
+            int cnt = __builtin_popcount(mask);
+            for (int i = 0; i < n; ++i) {
+                if (mask & (1 << i)) {
+                    sum += nums[n + i];
+                }
+                else {
+                    sum -= nums[n + i];
+                }
+            }
+            g[cnt].push_back(sum);
+        }
+        for (int i = 0; i <= n; ++i) {
+            sort(f[i].begin(), f[i].end());
+            sort(g[i].begin(), g[i].end());
+        }
+        
+        int ans = INT_MAX;
+        for (int i = 0; i <= n; ++i) {
+            // min(|f[i] + g[n - i]|)
+            for (int o: f[i]) {
+                // cout << "o = " << i << " " << o << endl;
+                auto it = lower_bound(g[n - i].begin(), g[n - i].end(), -o);
+                if (it != g[n - i].end()) {
+                    // cout << "cur it = " << *it << endl;
+                    ans = min(ans, abs(o + *it));
+                }
+                if (it != g[n - i].begin()) {
+                    // cout << "prev it = " << *prev(it) << endl;
+                    ans = min(ans, abs(o + *prev(it)));
+                }
+            }
+        }
+        return ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Smallest K-Length Subsequence With Occurrences of a Letter, Leetcode
+
+class Solution {
+public:
+
+    string smallestSubsequence(string s, int k, char letter, int rep) {
+        int n = s.length();
+        
+        //cnt[i] store the count of letter in suffix [i, n-1]
+        vector<int> cnt(n); 
+        cnt[n-1] = (s[n-1]==letter);
+        for(int i=n-2; i>=0; --i) cnt[i] = cnt[i+1] + (s[i]==letter);
+        
+        //for each character, store its indexe(s
+        
+        vector<deque<int>> ind(26);
+        for(int i=0; i<n; ++i) ind[s[i]-'a'].push_back(i);
+        
+        int x = rep, lastInd=-1;
+        string ans = "";
+        for(int j=0; j<k; ++j){
+            for(int ch=0; ch<26; ++ch){
+                auto &dq = ind[ch];
+                
+                //remove invalid indexes
+                while(dq.size() && dq.front() <= lastInd) dq.pop_front();
+                if(!dq.size()) continue;
+                
+                //check if current index satisfies the conditions 
+                auto index = dq.front();
+                if(ans.length() + n-index >= k && cnt[index] >= x && (x-(ch+'a'==letter)+j+1 <= k)){
+                    ans += ch+'a';
+                    if(ch+'a'==letter) x--;   
+                    lastInd = index;  
+                    dq.pop_front();
+                    break;
+                }
+            }
+        }
+        return ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Maximum Number of Ways to Partition an Array, Leetcode
+
+class Solution {
+public:
+    int waysToPartition(vector<int>& nums, int k) {
+        
+        int n = nums.size();
+        vector<long long> pref(n), suff(n);
+
+        //store prefix and suffix sum
+        pref[0] = nums[0]; suff[n-1] = nums[n-1];
+        for(int i=1; i<n; ++i) { 
+            pref[i]     = pref[i-1] + nums[i]; 
+            suff[n-1-i] = suff[n-i] + nums[n-1-i];
+        } 
+    
+        long long ans = 0;
+        unordered_map<long long,long long> left, right;
+        
+        //intially store the differences in the hashmap right
+        for(int i=0;i<n-1; ++i) right[pref[i] - suff[i+1]]++;
+        
+        if(right.count(0)) ans = right[0];
+        for(int i=0; i<n; ++i){
+
+            //find the number of pivot indexes when nums[i] is changed to k
+            long long curr = 0, diff = k-nums[i];
+            if(left.count(diff)) curr+=left[diff];
+            if(right.count(-diff)) curr+=right[-diff];
+
+            //update answer
+            ans = max(ans, curr);
+            
+            //transfer the current element from right to left
+            if(i<n-1){
+                long long dd = pref[i]-suff[i+1]; 
+                left[dd]++; right[dd]--;
+                if(right[dd] == 0) right.erase(dd);
+            }
+        }
+        return ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: The Score of Students Solving Math Expression, Leetcode
+
+class Solution {
+    public int scoreOfStudents(String s, int[] answers) {
+        final int N = s.length() / 2 + 1;
+        int correct = calculate(s);      
+        
+        Set<Integer>[][] sets = new HashSet[N][N];
+        for (int i = N - 1; i >= 0; i--) {
+            sets[i][i] = new HashSet<>();
+            sets[i][i].add(s.charAt(i * 2) - '0');
+            for (int j = i + 1; j < N; j++) {
+                sets[i][j] = new HashSet<>();
+                for (int k = i; k < j; k++) {
+                    for (int left : sets[i][k]) {
+                        for (int right : sets[k + 1][j]) {
+                            int ans = s.charAt(2 * k + 1) == '+' ? left + right : left * right;
+                            if (ans <= 1000) {
+                                sets[i][j].add(ans);    
+                            }                            
+                        }
+                    }
+                }
+            }
+        }
+        
+        int res = 0;
+        for (int a : answers) {
+            if (a == correct) {
+                res += 5;
+            } else if (sets[0][N - 1].contains(a)) {
+                res += 2;
+            }
+        }
+        return res;
+    }
+    
+    // calculate the correct answer using stack.
+    private int calculate(String s) {
+        Deque<Integer> stack = new ArrayDeque<>();
+        int i = 0;
+        while (i < s.length()) {
+            if (s.charAt(i) == '+') {
+                i++;
+            } else if (Character.isDigit(s.charAt(i))) {
+                stack.offerFirst(s.charAt(i++) - '0');
+            } else {
+                // '*'
+                i++;
+                stack.offerFirst(stack.pollFirst() * (s.charAt(i++) - '0'));
+            }            
+        }
+        int sum = 0;
+        while (!stack.isEmpty()) {
+            sum += stack.pollFirst();
+        }
+        return sum;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem:  Longest Subsequence Repeated k Times, Leetcode
+
+class Solution {
+    public String longestSubsequenceRepeatedK(String s, int k) {
+        final int N = 26;
+        String res = "";
+        // q only stores valid subsequences, initialized with a empty string.
+        Queue<String> q = new ArrayDeque<>();
+        q.offer("");
+        while (!q.isEmpty()) {
+            int size = q.size();
+            // BFS layer by layer, within each layer, the cur string has same length
+            while (size-- > 0) {
+                String cur = q.poll();
+                for (int i = 0; i < N; i++) {
+                    String next = cur + (char) ('a' + i);
+                    if (isSub(s, next, k)) {
+                        // always update res since we are looking for lexicographically largest.
+                        // clearly next, is possible, either has more length or has some larger character in the begining,
+                        // by looking at the way we iterate in for loop. 
+                        res = next;
+                        q.offer(next);
+                    }
+                }                
+            }
+        }
+        return res;
+    }
+    
+    // check if sub * k is a subsequence of string s. 
+    // Time complexity - O(n)
+    private boolean isSub(String s, String sub, int k) {
+        int j = 0;
+        int repeat = 0;
+        for (int i = 0; i < s.length(); i++) {
+            if (s.charAt(i) == sub.charAt(j)) {
+                j++;
+                if (j == sub.length()) {
+                    repeat++;
+                    if (repeat == k) {
+                        return true;
+                    }
+                    j = 0;
+                }
+            }
+        }
+        return false;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Minimum Number of Operations to Make Array Continuous, Leetcode
+
+class Solution {
+public:
+    int minOperations(vector<int>& a) {
+        set<int> st; // find all unique integers
+        for(auto e:a)
+            st.insert(e);
+        int m=a.size(),cnt=a.size()-st.size(),ans=a.size()+2; // integers which are repeated must be replaced
+        a.clear();
+        // m-- original array size
+        for(auto e:st)
+            a.push_back(e); // only unique integers
+        int i,n=a.size();
+        for(i=0;i<n;i++){
+            int l,r=a[i]; // if in final array a[i] is the largest element 
+            l=a[i]-m+1; // then smallest element in that array = r-m+1 (m-original size of array)
+            
+            // choose the most optimal out of all options
+            if(a[0]>=l)
+                ans=min(ans,cnt+n-i-1);
+            else{
+                int ind=lower_bound(a.begin(),a.end(),l)-a.begin();
+                ind--;
+                ans=min(ans,cnt+n-i+ind);
+            }
+        }
+        return ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Count All Possible Routes, Leetcode
+
+class Solution {
+    public int countRoutes(int[] locations, int start, int finish, int fuel) {
+        int n = locations.length;
+        long[][] dp = new long[n][fuel + 1];
+        for (int i = 0; i < n; ++i) {
+            Arrays.fill(dp[i], -1);
+        }
+        return (int) solve(locations, start, finish, dp, fuel);
+    }
+    // dp[curCity][fuel] = number of ways to reach finish, when we are at city `curCity` with fuel `fuel`
+    private long solve(int[] locations, int curCity, int e, long[][] dp, int fuel) {
+        // 4. There is no further way left.
+        if (fuel < 0) return 0;
+        if (dp[curCity][fuel] != -1) return dp[curCity][fuel];
+        // 3. Now, if we have atleast 1 way of reaching `end`, add 1 to the answer. But don't stop right here, keep going, there might be more ways :)
+        // This is the first time you have reached here.
+        // Whenever you hop, the fuel decreases.
+        long ans = (curCity == e) ? 1 : 0;
+        for (int nextCity = 0; nextCity < locations.length; ++nextCity) {
+            // 1. Visit all cities except `curCity`.
+            if (nextCity != curCity) {
+                // 2. Continue this process recursively.
+                // now the key point is that you do not need to multiply the ways or something like that.
+                // since you are hopping over, there is only one jump, so number of paths are same as from next location.
+                // +1 for if current location is the final location. Since you have an option of terminating here.
+                ans = (ans + solve(locations, nextCity, e, dp, fuel - Math.abs(locations[curCity] - locations[nextCity]))) % 1000000007;
+                // the number of ways can be indeed high because say you add 2 to itself. and then 4 to itself. the number grows exponentially.
+                // consider dp[destination][fuel] = x. now the fuel is getting less for every hop. but there can be many ways to reach 
+                // destination with given fuel.
+            }
+        }
+        return dp[curCity][fuel] = ans;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Remove Max Number of Edges to Keep Graph Fully Traversable, Leetcode
+
+class UnionFind {
+    vector<int> component;
+    int distinctComponents;
+public:
+    UnionFind(int n) {
+        distinctComponents = n;
+        for (int i=0; i<=n; i++) 
+            component.push_back(i);
+    }
+    bool unite(int a, int b) {       
+        if (findComponent(a) == findComponent(b)) return false;
+        component[findComponent(a)] = b;
+        distinctComponents--;
+        return true;
+    } 
+    int findComponent(int a) {
+        if (component[a] != a) {
+            component[a] = findComponent(component[a]);
+        }
+        return component[a];
+    } 
+    bool united() {return distinctComponents == 1;}
+};
+
+class Solution {
+    
+public:
+    int maxNumEdgesToRemove(int n, vector<vector<int>>& edges) {
+        // Sort edges by their type such that all type 3 edges will be at the beginning.
+        sort(edges.begin(), edges.end(), [] (vector<int> &a, vector<int> &b) { return a[0] > b[0]; });
+        
+        int edgesAdded = 0; // Stores the number of edges added to the initial empty graph.
+        
+        UnionFind bob(n), alice(n); // Track whether bob and alice can traverse the entire graph,
+                                    // are there still more than one distinct components, etc.
+        
+        for (auto &edge: edges) { // For each edge -
+            int type = edge[0], one = edge[1], two = edge[2];
+            switch(type) {
+                case 3:
+                    edgesAdded += (bob.unite(one, two) | alice.unite(one, two));
+                    break;
+                case 2:
+                    edgesAdded += bob.unite(one, two);
+                    break;
+                case 1:
+                    edgesAdded += alice.unite(one, two);
+                    break;
+            }
+        }
+        
+        return (bob.united() && alice.united()) ? (edges.size()-edgesAdded) : -1; // Yay, solved.
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Smallest Missing Genetic Value in Each Subtree, Leetcode
+
+vector<int> path;
+vector<int> ans;
+vector<int> mark;
+
+bool dfs(int s, int p, vector<vector<int>> &adj, vector<int>&nums){
+    bool flag = 0;
+    if(nums[s]==1){ flag = 1;}
+    for(auto &v : adj[s]){
+        if(v!=p){
+            if(dfs(v,s,adj,nums))
+                flag = 1;
+            else 
+                ans[v] = 1;
+        }
+    }
+    if(flag) path.push_back(s);
+    return flag;
+
+}
+
+void dfs1(int s, int p, vector<vector<int>> &adj, vector<int>&nums){
+
+    mark[nums[s]] = 1;
+    for(auto &v : adj[s]){
+        if(v!=p && !mark[nums[v]]){  // condition only works when num[v] values are distinct.
+            dfs1(v,s,adj,nums);
+        }
+    }
+}
+
+class Solution {
+public:
+    
+    vector<vector<int>> adj;
+    vector<int> smallestMissingValueSubtree(vector<int>& parents, vector<int>& nums) {
+        int n = parents.size();
+        adj.resize(n+1);
+        for(int i=1; i<n; ++i)
+            adj[parents[i]].push_back(i);
+
+        ans.clear(); ans.resize(n);
+        path.clear();
+        mark.clear(); mark.resize(100005);
+        
+        if(!dfs(0,-1,adj,nums))
+            ans[0] = 1;
+        int j=1;
+        
+        for(auto &v : path){
+            dfs1(v,parents[v],adj,nums);
+            while(j<=n && mark[j]){j++;}
+            ans[v] = j;
+        }
+        return ans;        
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem:  GCD Sort of an Array, Leetcode
+
+class UnionFind {
+    vector<int> parent;
+public:
+    UnionFind(int n) {
+        parent.resize(n);
+        for (int i = 0; i < n; i++) parent[i] = i;
+    }
+    int find(int x) {
+        if (x == parent[x]) return x;
+        return parent[x] = find(parent[x]); // Path compression
+    }
+    void Union(int u, int v) {
+        int pu = find(u), pv = find(v);
+        if (pu != pv) parent[pu] = pv;
+    }
+};
+class Solution {
+public:
+    vector<int> spf; // spf[x] is the smallest prime factor of number x, where x >= 2
+    bool gcdSort(vector<int>& nums) {
+        int maxNum = *max_element(nums.begin(), nums.end());
+        sieve(maxNum + 1);
+
+        UnionFind uf(maxNum+1);
+        for (int x : nums)
+            for (int f : getPrimeFactors(x))
+                uf.Union(x, f);
+
+        vector<int> sortedArr(nums);
+        sort(sortedArr.begin(), sortedArr.end());
+        for (int i = 0; i < nums.size(); ++i)
+            if (uf.find(nums[i]) != uf.find(sortedArr[i]))
+                return false; // can't swap nums[i] with sortedArr[i]
+        return true;
+    }
+    void sieve(int n) { // O(Nlog(logN)) ~ O(N)
+        spf.resize(n);
+        for (int i = 2; i < n; ++i) spf[i] = i;
+        for (int i = 2; i * i < n; i++) {
+            if (spf[i] != i) continue; // skip if `i` is not a prime number
+            for (int j = i * i; j < n; j += i)
+                if (spf[j] > i) spf[j] = i; // update to the smallest prime factor of j
+        }
+    }
+    vector<int> getPrimeFactors(int n) { // O(logN)
+        vector<int> factors;
+        while (n > 1) {
+            factors.push_back(spf[n]);
+            n /= spf[n];
+        }
+        return factors;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem:  The Number of Good Subsets, Leetcode
+
+class Solution {
+public:
+    
+    #define lld long long int
+    
+    int mul(lld a, lld b){
+        lld product = (a*b)%MOD;
+        return product;
+    }
+    
+    int add(lld a, lld b){
+        lld addition = (a+b)%MOD;
+        return addition;
+    }
+    
+    const int MOD = 1e9+7;
+    int binary_exponentiation(lld x, int p){
+        long long res = 1;
+        while(p){
+            if(p&1) res = mul(res, x);
+            x = mul(x, x);
+            p/=2;
+        }
+        return res;
+    }
+    
+    int goodSubsets(int pos, int mask, vector<int>& V, vector<vector<int>>& dp, vector<int>& cache){
+        if(pos == V.size()) return (mask>0);
+        
+        if(dp[pos][mask] != -1) return dp[pos][mask]%MOD;
+        
+        if(V[pos]&mask) return dp[pos][mask] = goodSubsets(pos+1, mask, V, dp, cache) % MOD;
+        return dp[pos][mask] = add(mul(cache[V[pos]],goodSubsets(pos+1, mask|V[pos], V, dp, cache)),goodSubsets(pos+1, mask, V, dp, cache));
+    }
+    
+    int numberOfGoodSubsets(vector<int>& nums) {
+        
+        int primes[10] = {2, 3, 5, 7, 11, 13, 17, 19, 23, 29};
+        
+        vector<int> V;
+        vector<int> cache(1025, 0);
+        
+        int ones = 0;
+        
+        for(auto x: nums){
+            int num = 0, k=0;
+            int flag = 1;
+            for(auto j: primes){
+                int cnt = 0;
+                while(x%j == 0){
+                    x/=j;
+                    cnt++;
+                    if(cnt>1) break;
+                }
+                if(cnt > 1){ flag = 0; break; }
+                if(cnt == 1)
+                    num = num | (1<<k);               
+                ++k;
+            }
+            if(flag == 0) continue;
+            if(num == 0) { ones++; continue; }
+            cache[num]++;
+            if(cache[num] > 1) continue;   
+            V.push_back(num);
+        }
+        vector<vector<int>> dp(V.size(), vector<int> (1024, -1));
+        int ans = goodSubsets(0,0,V,dp,cache);
+        ans = mul(binary_exponentiation(2, ones),ans);
+        return ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem:  Minimum Number of Days to Disconnect Island, Leetcode
+
+class Solution {
+    int M, N, dirs[4][2] = {{0,1},{0,-1},{1,0},{-1,0}};
+    void dfs(vector<vector<int>> &G, int i, int j,vector<vector<int>> &seen) {
+        seen[i][j] = true;
+        for (auto &[dx, dy] : dirs) {
+            int x = dx + i, y = dy + j;
+            if (x < 0 || x >= M || y < 0 || y >= N || G[x][y] != 1 || seen[x][y]) continue;
+            dfs(G, x, y, seen);
+        }
+    }
+    bool disconnected(vector<vector<int>> &G) {
+        vector<vector<int>> seen(M, vector<int>(N, false));
+        int cnt = 0;
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < N; ++j) {
+                if (G[i][j] != 1 || seen[i][j]) continue;
+                if (++cnt > 1) return true;
+                dfs(G, i, j, seen);
+            }
+        }
+        return cnt == 0;
+    }
+public:
+    int minDays(vector<vector<int>>& G) {
+        M = G.size(), N = G[0].size();
+        if (disconnected(G)) return 0;
+        for (int i = 0; i < M; ++i) {
+            for (int j = 0; j < N; ++j) {
+                if (G[i][j] != 1) continue;
+                G[i][j] = 0;
+                if (disconnected(G)) return 1;
+                G[i][j] = 1;
+            }
+        }
+        return 2;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Stone Game V, Leetcode
+
+class Solution {
+public:
+int f[502], g[502], h[502][502];
+int x[502], y[502];
+int s[502];
+
+int stoneGameV(vector<int>& stoneValue) {
+        vector<int>& a = stoneValue;
+        int n = a.size();
+        s[0] = 0;
+        for (int i=0; i<n; i++) s[i+1] = s[i] + a[i];
+        
+        for (int i=1; i<=n; i++) {
+            // the values are subject to change when the bounds will change.
+            f[i] = g[i] = 0; // f[i] denotes maximum forward result that we can have from i, g[i] denotes the backward result, from i.
+            x[i] = i;   // this denotes the maximum profitable index in forward direction from i.
+            y[i] = i-1; // this denotes the maximum profitable backward index from i.
+        }
+        
+        // calculate the answer in the increasing order of lengths.
+        for (int len=2; len<=n; len++) {
+            // any point can be the starting point
+            for (int i=1, j; (j = i+len-1) <= n; i++) {
+                // the meaure gives the maximum values that you can have in a subarray.
+                int half = (s[j] - s[i-1]) >> 1;
+
+                // consider forward things now.
+                int& k = x[i];
+                int& t = f[i]; 
+                int delta;
+                while (k < j && (delta = s[k] - s[i-1]) <= half) {
+                    t = max(t, delta + h[i][k++]);
+                }
+            
+                // consider going backward now.
+                int& k2 = y[j];
+                int& t2 = g[j];
+                while (k2 >= i && (delta = (s[j] - s[k2])) <= half) {
+                    t2 = max(t2, delta + h[k2+1][j]);
+                    k2--;
+                }
+                
+                // for given subarray, you can either get fron the begining or from the ending.
+                h[i][j] = max(t, t2);
+            }
+        }
+        return h[1][n];
+    }    
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Minimum Number of Days to Eat N Oranges, Leetcode
+
+class Solution {
+public:
+    unordered_map<int, int> dp;
+    int minDays(int n) {
+        return dfs(n);
+    }
+    
+    int dfs(int n) {
+        if(n == 1) return 1;
+        if(n == 2) return 2;
+        if(dp.count(n)) return dp[n];
+        int res = INT_MAX;
+        if(n % 2 == 0)
+            res = min(res, 1 + dfs(n / 2));
+        if(n % 3 == 0)
+            res = min(res, 1 + dfs(n / 3));
+        if((n - 1) % 2 == 0 || (n - 1 )% 3 == 0)
+            res = min(res, 1 + dfs(n - 1));
+        if((n - 2) % 3 == 0)
+            res = min(res, 2 + dfs(n - 2));
+        return dp[n] = res;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Get the Maximum Score, Leetcode
+
+class Solution {
+public:
+    int maxSum(vector<int>& nums1, vector<int>& nums2) {
+        int mod=1e9+7;
+        long long int ans=0, sum1=0, sum2=0;
+        int i=0, j=0;
+        while(i<nums1.size() and j<nums2.size())
+        {
+            if(nums1[i] < nums2[j])
+                sum1 += nums1[i++]; 
+            else if(nums1[i] > nums2[j])
+                sum2 += nums2[j++];
+            else
+            {
+                ans += nums1[i] + max(sum1, sum2);
+                i++;
+                j++;
+                sum1=0;
+                sum2=0;
+            }
+        }
+        while(i<nums1.size())
+            sum1 += nums1[i++];
+        while(j<nums2.size())
+            sum2 += nums2[j++];
+        ans += max(sum1, sum2);
+        ans = ans%mod;
+        return (int)ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------

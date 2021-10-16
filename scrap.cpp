@@ -5047,3 +5047,132 @@ public:
 };
 
 // -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Best Position for a Service Centre, Leetcode
+
+class Solution:
+    def getMinDistSum(self, positions: List[List[int]]) -> float:
+        #euclidean distance 
+        fn = lambda x, y: sum(sqrt((x-xx)**2 + (y-yy)**2) for xx, yy in positions)
+        #centroid as starting point
+        x = sum(x for x, _ in positions)/len(positions)
+        y = sum(y for _, y in positions)/len(positions)
+        
+        ans = fn(x, y)
+        chg = 100 #change since 0 <= positions[i][0], positions[i][1] <= 100
+        while chg > 1e-6: #accuracy within 1e-5
+            zoom = True
+            for dx, dy in (-1, 0), (0, -1), (0, 1), (1, 0):
+                xx = x + chg * dx
+                yy = y + chg * dy
+                dd = fn(xx, yy)
+                if dd < ans: 
+                    ans = dd 
+                    x, y = xx, yy
+                    zoom = False 
+                    break 
+            if zoom: chg /= 2
+        return ans 
+
+double getMinDistSum(vector<vector<int>>& pos) {
+    double left = 100, bottom = 100, right = 0, top = 0;
+    for (auto &p : pos) {
+        left = min(left, (double)p[0]);
+        bottom = min(bottom, (double)p[1]);
+        right = max(right, (double)p[0]);
+        top = max(top, (double)p[1]);
+    }
+    double res = DBL_MAX, res_x = 0, res_y = 0;
+    for (double delta = 10; delta >= 0.00001; delta /= 10) {
+        for (double x = left; x <= right; x += delta)
+            for (double y = bottom; y <= top; y += delta) {
+                double d = 0;
+                for (auto &p : pos)
+                    d += sqrt((p[0] - x) * (p[0] - x) + (p[1] - y) * (p[1] - y));
+                if (res > d) {
+                    res = d;
+                    res_x = x;
+                    res_y = y;
+                }
+            }
+        left = res_x - delta;
+        bottom = res_y - delta;
+        right = res_x + delta * 2;
+        top = res_y + delta * 2;
+    }
+    return res == DBL_MAX ? 0 : res;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Stone Game IV, Leetcode
+
+bool winnerSquareGame(int n) {
+    vector<bool> dp(n + 1, false);
+    for (int i = 1; i <= n; ++i) {
+        for (int k = 1; k * k <= i; ++k) {
+            if (!dp[i - k * k]) {
+                dp[i] = true;
+                break;
+            }
+        }
+    }
+    return dp[n];
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Max Value of Equation, Leetcode
+
+class Solution {
+public:
+    int findMaxValueOfEquation(vector<vector<int>>& pts, int k) {
+        priority_queue<pair<int, int>> pq; // max-heap
+        pq.push({pts[0][1]-pts[0][0],pts[0][0]});
+        int ans= INT_MIN;
+        for(int i=1;i<pts.size();i++) {
+            int sum = pts[i][0]+pts[i][1];
+            while(!pq.empty() && pts[i][0]-pq.top().second>k) pq.pop();
+            if(!pq.empty())ans = max(ans,sum+pq.top().first);
+            pq.push({pts[i][1]-pts[i][0],pts[i][0]});
+            cout<<i<<' '<<ans<<'\n';
+        }
+        cout<<'\n';
+        return ans;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Problem: Kth Ancestor of a Tree Node, Leetcode
+
+class TreeAncestor {
+public:
+    vector<vector<int> > P; 
+    TreeAncestor(int n, vector<int>& parent) {
+        P.resize(20, vector<int>(parent.size(), -1));
+
+        for(int i = 0; i < parent.size(); i++)
+            P[0][i] = parent[i];
+        
+        for(int i = 1; i < 20; i++){
+            for(int node = 0; node < parent.size(); node ++){
+                int nodep = P[i-1][node];
+                if(nodep != -1) P[i][node] = P[i-1][nodep];
+            }
+        }
+    }
+    
+    int getKthAncestor(int node, int k) {
+        for(int i = 0; i < 20; i++){
+            if(k & (1 << i)){
+                node = P[i][node];
+                if(node == -1) return -1;
+            }
+        }
+        return node;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+

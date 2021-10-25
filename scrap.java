@@ -193,7 +193,6 @@ fun main(args: Array<String>) {
     }
 }
 
-
 fun main(args: Array<String>) {
     var (n, m) = readInts()
     var s = Array<String>(n) {""}
@@ -467,3 +466,90 @@ fun main(args: Array<String>) {
 }
 
 // ------------------------------------------------------------------------------------------------------
+
+// Getting Day of the date
+
+public static String findDay(int month, int day, int year) {
+    String day_ = String.valueOf(day);
+    if(day_.length()==1) day_ = "0" + String.valueOf(day);
+    String month_ = String.valueOf(month);
+    if(month_.length()==1) month_ = "0" + String.valueOf(month);
+    String year_ = String.valueOf(year);
+    String inputDate = day_ + "/" + month_ + "/" + year_;
+    SimpleDateFormat format1 = new SimpleDateFormat("dd/MM/yyyy");
+    try{
+        Date dt1 = format1.parse(inputDate);
+        DateFormat format2 = new SimpleDateFormat("EEEE"); 
+        String finalDay = format2.format(dt1);
+        return finalDay.toUpperCase();   
+    }catch (Exception e){
+        System.out.println("Exception");
+    }
+    return "NULL";
+}
+
+// Printing the currency in given format.
+
+import java.util.*;
+import java.text.*;
+
+public class Solution {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        double payment = scanner.nextDouble();
+        scanner.close();
+        NumberFormat numfor = NumberFormat.getCurrencyInstance(Locale.US);
+        String us = numfor.format(payment);
+        System.out.println("US: " + us);
+        numfor = NumberFormat.getCurrencyInstance(new Locale("en","IN"));
+        String india = numfor.format(payment);
+        System.out.println("India: " + india);
+        numfor = NumberFormat.getCurrencyInstance(Locale.CHINA);
+        String china = numfor.format(payment);
+        System.out.println("China: " + china);
+        numfor = NumberFormat.getCurrencyInstance(Locale.FRANCE);
+        String france = numfor.format(payment);
+        System.out.println("France: " + france);
+    }
+}
+
+
+    import java.util.*;
+    public class test {
+        public static void main(String[] args) {
+            Scanner in = new Scanner(System.in);
+            Deque<Integer> deque = new ArrayDeque<Integer>();
+            int n = in.nextInt();
+            int m = in.nextInt();
+            HashMap<Integer,Integer> present = new HashMap<Integer,Integer>();
+            Integer ans = 0, curr = 0;
+            for (int i = 0; i < n; i++) {
+                Integer num = in.nextInt();
+                if(deque.size()<m){
+                    deque.addLast(num); 
+                    Integer current = present.getOrDefault(num,0);
+                    if(current == 0) curr += 1;
+                    current += 1;
+                    present.put(num,current);
+                }else {
+                    Integer here = deque.pollFirst();
+                    Integer current = present.getOrDefault(here,0);
+                    if(current == 1) curr -=1;
+                    current -= 1;
+                    present.put(here,current);
+                    deque.addLast(num); 
+                    current = present.getOrDefault(num,0);
+                    if(current == 0) curr += 1;
+                    current += 1;
+                    present.put(num,current);
+                }
+                if(ans<curr) 
+                    ans = curr;
+            }
+            in.close();
+            System.out.println(ans);
+        }
+    }
+
+
+

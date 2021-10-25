@@ -5176,3 +5176,1067 @@ public:
 
 // -----------------------------------------------------------------------------------------------------------------------------------
 
+// Leetcode : Weekly Contest 264 Solutions
+
+class Solution {
+public:
+    int minimumTime(int n, vector<vector<int>>& r, vector<int>& t) {
+        vector<vector<int>> g(n);
+        vector<int> deg(n);
+        for(auto &v : r) {
+            --v[0],--v[1];
+            g[v[0]].push_back(v[1]);
+            deg[v[1]]++;
+        }
+        queue<int> q;
+        for(int i=0;i<n;++i) if(!deg[i]) q.push(i);
+        vector<int> dp(n);
+        while(!q.empty()) {
+            int cur=q.front();q.pop();
+            dp[cur]+=t[cur];
+            for(int v : g[cur]) {
+                if(--deg[v]==0) {
+                    q.push(v);
+                }
+                dp[v]=max(dp[v],dp[cur]);
+            }
+        }
+        return *max_element(dp.begin(),dp.end());
+    }
+};
+
+class Solution {
+    int n, ans;
+    long long best;
+    vector<int> e[100010];
+
+    int dfs(int sn) {
+        int ret = 1;
+        vector<int> vec;
+        for (int fn : e[sn]) {
+            int x = dfs(fn);
+            ret += x;
+            vec.push_back(x);
+        }
+        vec.push_back(n - ret);
+        long long t = 1;
+        for (int x : vec) if (x) t *= x;
+        if (t > best) ans = 1, best = t;
+        else if (t == best) ans++;
+        return ret;
+    }
+
+public:
+    int countHighestScoreNodes(vector<int>& parents) {
+        n = parents.size();
+        for (int i = 1; i < n; i++) e[parents[i]].push_back(i);
+        dfs(0);
+        return ans;
+    }
+};
+
+class Solution {
+    int cnt[10];
+    
+    bool check(int x) {
+        memset(cnt, 0, sizeof(cnt));
+        for (; x; x /= 10) cnt[x % 10]++;
+        for (int i = 0; i <= 9; i++) if (cnt[i] && cnt[i] != i) return false;
+        return true;
+    }
+    
+public:
+    int nextBeautifulNumber(int n) {
+        for (int i = n + 1; ; i++) if (check(i)) return i;
+    }
+};
+
+class Solution:
+    def countValidWords(self, sentence: str) -> int:
+        ans = 0
+        for s in sentence.split():
+            if self.check(s):
+                ans += 1
+        return ans
+    
+    def check(self, s: str) -> bool:
+        for c in s:
+            if c.isdigit():
+                return False
+        if s.count('-') > 1:
+            return False
+        elif s.count('-') == 1:
+            i = s.index('-')
+            if i == len(s) - 1 or i == 0:
+                return False
+            if not (s[i - 1].isalpha() and s[i + 1].isalpha()):
+                return False
+        t = s.count('!') + s.count('.') + s.count(',')
+        if t > 1:
+            return False
+        elif t == 1:
+            if s[-1] != '!' and s[-1] != '.' and s[-1] != ',':
+                return False
+        return True
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Codeforces edu Step5 : C,D,F suffix array. HealthyUG
+
+#include "bits/stdc++.h"
+using namespace std;
+#define int               long long
+#define pb                push_back
+#define ppb               pop_back
+#define pf                push_front
+#define ppf               pop_front
+#define all(x)            (x).begin(),(x).end()
+#define uniq(v)           (v).erase(unique(all(v)),(v).end())
+#define sz(x)             (int)((x).size())
+#define fr                first
+#define sc                second
+#define pii               pair<int,int>
+#define rep(i,a,b)        for(int i=a;i<b;i++)
+#define mem1(a)           memset(a,-1,sizeof(a))
+#define mem0(a)           memset(a,0,sizeof(a))
+#define ppc               __builtin_popcount
+#define ppcll             __builtin_popcountll
+
+template<typename T1,typename T2>istream& operator>>(istream& in,pair<T1,T2> &a){in>>a.fr>>a.sc;return in;}
+template<typename T1,typename T2>ostream& operator<<(ostream& out,pair<T1,T2> a){out<<a.fr<<" "<<a.sc;return out;}
+template<typename T,typename T1>T amax(T &a,T1 b){if(b>a)a=b;return a;}
+template<typename T,typename T1>T amin(T &a,T1 b){if(b<a)a=b;return a;}
+
+const long long INF=1e18;
+const int32_t M=1e9+7;
+const int32_t MM=998244353;
+
+const int N=4e5+5;
+
+int p[N];
+int c[N];
+pair<pii, int> np[N] , nnp[N];
+int cnt[N];
+// int lcp[N];
+
+const int maxn=N;
+const int max_logn=20;
+template<typename T>
+struct SparseTable{
+    int log[maxn];
+    T dp[max_logn][maxn];
+    T combine(T a,T b){
+        return min(a,b);
+    }
+    SparseTable(){
+        log[1] = 0;
+        for (int i = 2; i < maxn; i++)
+            log[i] = log[i/2] + 1;
+    }
+    void build(vector<T> b)
+    {
+        int n=b.size();
+        for (int i = 0; i < n; ++i){
+            dp[0][i]=b[i];
+        }
+        for (int j = 1; j < max_logn; j++)
+            for (int i = 0; i + (1 << j) < maxn; i++)
+                dp[j][i] = combine(dp[j - 1][i], dp[j - 1][i + (1 << (j - 1))]);
+    }
+    T query(int l,int r)
+    {
+        if(l > r) return INF;
+        int j=log[r-l+1];
+        return combine(dp[j][l],dp[j][r-(1<<j)+1]);
+    }
+};
+SparseTable<int> sp;
+
+void solve(){
+    string s;
+    cin>>s;
+    s += 20;
+    int n = sz(s);
+    
+    rep(i,0,n){
+        np[i] = {{s[i],0},i};
+    }
+    sort(np,np+n);
+    
+    rep(i,0,n) p[i] = np[i].sc;
+    
+    c[p[0]] = 0;
+    rep(i,1,n){
+        c[p[i]] = c[p[i-1]];
+        if(np[i].fr != np[i-1].fr) c[p[i]]++;
+    }
+
+    int k = 0;
+    while((1<<k) <= n){
+        rep(i,0,n) cnt[i] = 0;
+        rep(i,0,n){
+            np[i] = {{c[(n+p[i]-(1<<k))%n],c[p[i]]},(n+p[i]-(1<<k))%n};
+            cnt[c[(n+p[i]-(1<<k))%n]]++;
+        }
+        rep(i,1,n) cnt[i] += cnt[i-1];
+        
+        for(int i=n-1;i>=0;i--){
+            nnp[--cnt[np[i].fr.fr]] = np[i];
+        }
+        
+        rep(i,0,n) p[i] = nnp[i].sc;
+        c[p[0]] = 0;
+        rep(i,1,n){
+            c[p[i]] = c[p[i-1]];
+            if(nnp[i].fr != nnp[i-1].fr) c[p[i]]++;
+        }
+        k++;
+    }
+    
+    vector<int> lcp(n);
+    
+    k = 0;
+    rep(i,0,n-1){
+        int x = c[i];
+        while(s[p[x] + k] == s[p[x-1] + k]) k++;
+        lcp[x-1] = k;
+        k--;
+        amax(k,0);
+    }
+    
+    sp.build(lcp);
+    
+    auto cmp = [&](pii a, pii b){
+        bool ans = 1;
+        if(c[a.fr-1] > c[b.fr-1]) ans = 0,swap(a,b);
+        if(sp.query(c[a.fr-1],c[b.fr-1]-1) < min(a.sc-a.fr+1,b.sc-b.fr+1)) return ans^0;
+        if(a.sc-a.fr != b.sc-b.fr) return (a.sc-a.fr < b.sc-b.fr) ^ (!ans);
+        return (a<b) ^ (!ans);
+    };
+    
+    int q;
+    cin>>q;
+    vector<pii> v(q);
+    rep(i,0,q){
+        cin>>v[i];
+    }
+    sort(all(v),cmp);
+    for(auto x:v){
+        cout<<x<<"\n";
+    }
+    
+}
+signed main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);cout.tie(0);
+    //freopen("input.txt", "r", stdin);
+    //freopen("output.txt", "w", stdout);
+    #ifdef SIEVE
+        sieve();
+    #endif
+    #ifdef NCR
+        init();
+    #endif
+    int t=1;
+    //cin>>t;
+    while(t--) solve();
+    return 0;
+}
+
+#include "bits/stdc++.h"
+using namespace std;
+#define int               long long
+#define pb                push_back
+#define ppb               pop_back
+#define pf                push_front
+#define ppf               pop_front
+#define all(x)            (x).begin(),(x).end()
+#define uniq(v)           (v).erase(unique(all(v)),(v).end())
+#define sz(x)             (int)((x).size())
+#define fr                first
+#define sc                second
+#define pii               pair<int,int>
+#define rep(i,a,b)        for(int i=a;i<b;i++)
+#define mem1(a)           memset(a,-1,sizeof(a))
+#define mem0(a)           memset(a,0,sizeof(a))
+#define ppc               __builtin_popcount
+#define ppcll             __builtin_popcountll
+
+template<typename T1,typename T2>istream& operator>>(istream& in,pair<T1,T2> &a){in>>a.fr>>a.sc;return in;}
+template<typename T1,typename T2>ostream& operator<<(ostream& out,pair<T1,T2> a){out<<a.fr<<" "<<a.sc;return out;}
+template<typename T,typename T1>T amax(T &a,T1 b){if(b>a)a=b;return a;}
+template<typename T,typename T1>T amin(T &a,T1 b){if(b<a)a=b;return a;}
+
+const long long INF=1e18;
+const int32_t M=1e9+7;
+const int32_t MM=998244353;
+
+const int N=4e5+5;
+
+int p[N];
+int c[N];
+pair<pii, int> np[N] , nnp[N];
+int cnt[N];
+int lcp[N];
+
+
+void solve(){
+    string s;
+    cin>>s;
+    s += "$";
+    int n = sz(s);
+    
+    rep(i,0,n){
+        np[i] = {{s[i],0},i};
+    }
+    sort(np,np+n);
+    
+    rep(i,0,n) p[i] = np[i].sc;
+    
+    c[p[0]] = 0;
+    rep(i,1,n){
+        c[p[i]] = c[p[i-1]];
+        if(np[i].fr != np[i-1].fr) c[p[i]]++;
+    }
+
+    int k = 0;
+    while((1<<k) <= n){
+        rep(i,0,n) cnt[i] = 0;
+        rep(i,0,n){
+            np[i] = {{c[(n+p[i]-(1<<k))%n],c[p[i]]},(n+p[i]-(1<<k))%n};
+            cnt[c[(n+p[i]-(1<<k))%n]]++;
+        }
+        rep(i,1,n) cnt[i] += cnt[i-1];
+        
+        for(int i=n-1;i>=0;i--){
+            nnp[--cnt[np[i].fr.fr]] = np[i];
+        }
+        
+        rep(i,0,n) p[i] = nnp[i].sc;
+        c[p[0]] = 0;
+        rep(i,1,n){
+            c[p[i]] = c[p[i-1]];
+            if(nnp[i].fr != nnp[i-1].fr) c[p[i]]++;
+        }
+        k++;
+    }
+    
+    
+    k = 0;
+    rep(i,0,n-1){
+        int x = c[i];
+        while(s[p[x] + k] == s[p[x-1] + k]) k++;
+        lcp[x-1] = k;
+        k--;
+        amax(k,0);
+    }
+    
+    int ans = n*(n-1)/2;
+    
+    vector<pii> v;
+    v.pb({0,0});
+    
+    rep(i,0,n){
+        pii x = {lcp[i],1};
+        while(sz(v) > 1 && v.back().fr > x.fr){
+            pii t = v.back();
+            v.ppb();
+            if(v.back().fr > x.fr){
+                ans += (t.sc * (t.sc + 1) / 2) * (t.fr - v.back().fr);
+                v.back().sc += t.sc;
+            }
+            else{
+                ans += (t.sc * (t.sc + 1) / 2) * (t.fr - x.fr);
+                x.sc += t.sc;
+            }
+        }
+        
+        if(v.back().fr == x.fr) v.back().sc += x.sc;
+        else v.pb(x);
+    }
+    
+    cout<<ans;
+    
+}
+signed main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);cout.tie(0);
+    //freopen("input.txt", "r", stdin);
+    //freopen("output.txt", "w", stdout);
+    #ifdef SIEVE
+        sieve();
+    #endif
+    #ifdef NCR
+        init();
+    #endif
+    int t=1;
+    //cin>>t;
+    while(t--) solve();
+    return 0;
+}
+
+#include "bits/stdc++.h"
+using namespace std;
+// #define int               long long
+#define pb                push_back
+#define ppb               pop_back
+#define pf                push_front
+#define ppf               pop_front
+#define all(x)            (x).begin(),(x).end()
+#define uniq(v)           (v).erase(unique(all(v)),(v).end())
+#define sz(x)             (int)((x).size())
+#define fr                first
+#define sc                second
+#define pii               pair<int,int>
+#define rep(i,a,b)        for(int i=a;i<b;i++)
+#define mem1(a)           memset(a,-1,sizeof(a))
+#define mem0(a)           memset(a,0,sizeof(a))
+#define ppc               __builtin_popcount
+#define ppcll             __builtin_popcountll
+
+template<typename T1,typename T2>istream& operator>>(istream& in,pair<T1,T2> &a){in>>a.fr>>a.sc;return in;}
+template<typename T1,typename T2>ostream& operator<<(ostream& out,pair<T1,T2> a){out<<a.fr<<" "<<a.sc;return out;}
+template<typename T,typename T1>T amax(T &a,T1 b){if(b>a)a=b;return a;}
+template<typename T,typename T1>T amin(T &a,T1 b){if(b<a)a=b;return a;}
+
+const long long INF=1e18;
+const int32_t M=1e9+7;
+const int32_t MM=998244353;
+
+const int N=4e5+5;
+
+int p[N];
+int c[N];
+pair<pii, int> np[N] , nnp[N];
+int cnt[N];
+int lcp[N];
+
+int ans = 1;
+
+void merge(pair<int, set<int>> &a, pair<int, set<int>> &b){
+    if(sz(a.sc) < sz(b.sc)) swap(a.sc,b.sc);
+    int lcp = a.fr;
+    for(int x:b.sc){
+        auto it = a.sc.lower_bound(x);
+        if(*it == x) continue;
+        if(it != a.sc.end()){
+            amax(ans,1 + lcp / (*it - x));
+        }
+        if(it != a.sc.begin()){
+            it--;
+            amax(ans,1+ lcp / (x - *it));
+        }
+    }
+    for(int x:b.sc){
+        a.sc.insert(x);
+    }
+}
+
+void solve(){
+    string s;
+    cin>>s;
+    
+    s += "$";
+    int n = sz(s);
+    
+    rep(i,0,n){
+        np[i] = {{s[i],0},i};
+    }
+    sort(np,np+n);
+    
+    rep(i,0,n) p[i] = np[i].sc;
+    
+    c[p[0]] = 0;
+    rep(i,1,n){
+        c[p[i]] = c[p[i-1]];
+        if(np[i].fr != np[i-1].fr) c[p[i]]++;
+    }
+
+    int k = 0;
+    while((1<<k) <= n){
+        rep(i,0,n) cnt[i] = 0;
+        rep(i,0,n){
+            np[i] = {{c[(n+p[i]-(1<<k))%n],c[p[i]]},(n+p[i]-(1<<k))%n};
+            cnt[c[(n+p[i]-(1<<k))%n]]++;
+        }
+        rep(i,1,n) cnt[i] += cnt[i-1];
+        
+        for(int i=n-1;i>=0;i--){
+            nnp[--cnt[np[i].fr.fr]] = np[i];
+        }
+        
+        rep(i,0,n) p[i] = nnp[i].sc;
+        c[p[0]] = 0;
+        rep(i,1,n){
+            c[p[i]] = c[p[i-1]];
+            if(nnp[i].fr != nnp[i-1].fr) c[p[i]]++;
+        }
+        k++;
+    }
+    
+    
+    k = 0;
+    rep(i,0,n-1){
+        int x = c[i];
+        while(s[p[x] + k] == s[p[x-1] + k]) k++;
+        lcp[x-1] = k;
+        k--;
+        amax(k,0);
+    }
+    
+    vector<pair<int, set<int>>> v;
+    v.pb({0,{}});
+    
+    // cout<<lcp[n]<<" "<<p[n]<<"\n";
+    lcp[n-1] = 0, p[n] = -1;
+    
+    rep(i,0,n){
+        pair<int, set<int>> x = {lcp[i],{p[i],p[i+1]}};
+        amax(ans, 1 + lcp[i] / abs(p[i] - p[i+1]));
+        while(v.back().fr != 0 && x.fr < v.back().fr){
+            pair<int, set<int>> tmp = move(v.back());
+            v.ppb();
+            if(x.fr > v.back().fr){
+                merge(x,tmp);
+            }
+            else{
+                merge(v.back(),tmp);
+            }
+        }
+        if(v.back().fr && v.back().fr == x.fr) merge(v.back(),x);
+        else v.pb(move(x));
+    }
+    // for(auto &x:v) cout<<x.fr<<"\n";
+    cout<<ans;
+}
+signed main(){
+    ios_base::sync_with_stdio(false);
+    cin.tie(0);cout.tie(0);
+    //freopen("input.txt", "r", stdin);
+    //freopen("output.txt", "w", stdout);
+    #ifdef SIEVE
+        sieve();
+    #endif
+    #ifdef NCR
+        init();
+    #endif
+    int t=1;
+    //cin>>t;
+    while(t--) solve();
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Codeforces edu Step5 : C,D,F suffix array. HealthyUG
+
+//This Code was made by Chinese_zjc_.
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
+#include <vector>
+#include <bitset>
+#include <cmath>
+#include <queue>
+#include <stack>
+#include <string>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <set>
+#include <ctime>
+// #include<windows.h>
+#define int long long
+#define double long double
+using namespace std;
+const double PI = acos(-1);
+const double eps = 0.0000000001;
+const int INF = 0x3fffffffffffffff;
+int n, m = 128, q, cnt, sa[400005], tmp[400005], sum[400005], rk[20][400005], height[400005], h, lg[400005];
+string s;
+struct substring
+{
+    int l, r;
+    const int length() const
+    {
+        return r - l + 1;
+    }
+    friend bool operator<(const substring &A, const substring &B)
+    {
+        int len = min(A.length(), B.length());
+        pair<int, int> AA = {rk[lg[len]][A.l], rk[lg[len]][A.l + len - (1 << lg[len])]};
+        pair<int, int> BB = {rk[lg[len]][B.l], rk[lg[len]][B.l + len - (1 << lg[len])]};
+        return AA == BB ? (A.length() == B.length() ? (A.l == B.l ? A.r < B.r : A.l < B.l) : A.length() < B.length()) : AA < BB;
+    }
+} a[400005];
+int lowbit(int now)
+{
+    return now & -now;
+}
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin >> s;
+    n = s.length();
+    s = ' ' + s;
+    for (int i = 1; i <= n; ++i)
+    {
+        ++sum[rk[0][i] = s[i]];
+    }
+    for (int i = 1; i <= m; ++i)
+    {
+        sum[i] += sum[i - 1];
+    }
+    for (int i = 1; i <= n; ++i)
+    {
+        sa[sum[rk[0][i]]--] = i;
+    }
+    for (int k = 0; 1 << k <= n; ++k)
+    {
+        cnt = 0;
+        for (int i = n - (1 << k) + 1; i <= n; ++i)
+        {
+            tmp[++cnt] = i;
+        }
+        for (int i = 1; i <= n; ++i)
+        {
+            if (sa[i] > 1 << k)
+            {
+                tmp[++cnt] = sa[i] - (1 << k);
+            }
+        }
+        for (int i = 1; i <= m; ++i)
+        {
+            sum[i] = 0;
+        }
+        for (int i = 1; i <= n; ++i)
+        {
+            ++sum[rk[k][i]];
+        }
+        for (int i = 1; i <= m; ++i)
+        {
+            sum[i] += sum[i - 1];
+        }
+        for (int i = n; i; --i)
+        {
+            sa[sum[rk[k][tmp[i]]]--] = tmp[i];
+        }
+        m = 1;
+        rk[k + 1][sa[1]] = 1;
+        for (int i = 2; i <= n; ++i)
+        {
+            rk[k + 1][sa[i]] = rk[k][sa[i]] == rk[k][sa[i - 1]] && rk[k][sa[i] + (1 << k)] == rk[k][sa[i - 1] + (1 << k)] ? m : ++m;
+        }
+    }
+    // for (int i = 1; i <= n; ++i)
+    // {
+    //     cout << sa[i] << ' ' << s.substr(sa[i]) << endl;
+    // }
+    cin >> q;
+    for (int i = 1; i <= q; ++i)
+    {
+        cin >> a[i].l >> a[i].r;
+    }
+    for (int i = 2; i <= n; ++i)
+    {
+        lg[i] = lg[i - 1] + (lowbit(i) == i);
+    }
+    sort(a + 1, a + 1 + q);
+    for (int i = 1; i <= q; ++i)
+    {
+        cout << a[i].l << ' ' << a[i].r << endl;
+    }
+    return 0;
+}
+
+//This Code was made by Chinese_zjc_.
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
+#include <vector>
+#include <bitset>
+#include <cmath>
+#include <queue>
+#include <stack>
+#include <string>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <map>
+#include <set>
+#include <ctime>
+// #include<windows.h>
+#define int long long
+#define double long double
+using namespace std;
+const double PI = acos(-1);
+const double eps = 0.0000000001;
+const int INF = 0x3fffffffffffffff;
+string s;
+int n, m = 128, cnt, height[20][400005], rk[400005], tmp[400005], sa[400005], sum[400005], h, lg[400005], ans;
+int get(int l, int r)
+{
+    return min(height[lg[r - l + 1]][l], height[lg[r - l + 1]][r - (1 << lg[r - l + 1]) + 1]);
+}
+int lowbit(int now)
+{
+    return now & -now;
+}
+struct segmenttree
+{
+#define lson (now << 1)
+#define rson (lson | 1)
+#define lmid ((l + r) >> 1)
+#define rmid (lmid + 1)
+    int sum[1 << 20];
+    bool kill[1 << 20];
+    segmenttree()
+    {
+        memset(sum, 0, sizeof sum);
+        memset(kill, false, sizeof kill);
+    }
+    void push_down(int now)
+    {
+        if (kill[now])
+        {
+            sum[lson] = 0;
+            sum[rson] = 0;
+            kill[lson] = true;
+            kill[rson] = true;
+            kill[now] = false;
+        }
+    }
+    void push_up(int now)
+    {
+        sum[now] = sum[lson] + sum[rson];
+    }
+    int query(int L, int R, int now = 1, int l = 1, int r = n)
+    {
+        if (L <= l && r <= R)
+        {
+            return sum[now];
+        }
+        if (r < L || R < l)
+        {
+            return 0;
+        }
+        push_down(now);
+        int res = query(L, R, lson, l, lmid) + query(L, R, rson, rmid, r);
+        push_up(now);
+        return res;
+    }
+    void add(int pos, int v, int now = 1, int l = 1, int r = n)
+    {
+        if (r < pos || pos < l)
+        {
+            return;
+        }
+        if (l == r)
+        {
+            sum[now] += v;
+            return;
+        }
+        push_down(now);
+        add(pos, v, lson, l, lmid);
+        add(pos, v, rson, rmid, r);
+        push_up(now);
+    }
+    void clear(int L, int R, int now = 1, int l = 1, int r = n)
+    {
+        if (L <= l && r <= R)
+        {
+            sum[now] = 0;
+            kill[now] = true;
+            return;
+        }
+        if (R < l || r < L)
+        {
+            return;
+        }
+        push_down(now);
+        clear(L, R, lson, l, lmid);
+        clear(L, R, rson, rmid, r);
+        push_up(now);
+    }
+#undef lson
+#undef rson
+#undef lmid
+#undef rmid
+} a, b;
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin >> s;
+    n = s.length();
+    s = ' ' + s;
+    for (int i = 1; i <= n; ++i)
+    {
+        ++sum[rk[i] = s[i]];
+    }
+    for (int i = 1; i <= m; ++i)
+    {
+        sum[i] += sum[i - 1];
+    }
+    for (int i = 1; i <= n; ++i)
+    {
+        sa[sum[rk[i]]--] = i;
+    }
+    for (int k = 1; k <= n; k <<= 1)
+    {
+        cnt = 0;
+        for (int i = n - k + 1; i <= n; ++i)
+        {
+            tmp[++cnt] = i;
+        }
+        for (int i = 1; i <= n; ++i)
+        {
+            if (sa[i] > k)
+            {
+                tmp[++cnt] = sa[i] - k;
+            }
+        }
+        for (int i = 1; i <= m; ++i)
+        {
+            sum[i] = 0;
+        }
+        for (int i = 1; i <= n; ++i)
+        {
+            ++sum[rk[i]];
+        }
+        for (int i = 1; i <= m; ++i)
+        {
+            sum[i] += sum[i - 1];
+        }
+        for (int i = n; i; --i)
+        {
+            sa[sum[rk[tmp[i]]]--] = tmp[i];
+        }
+        swap(rk, tmp);
+        m = 1;
+        rk[sa[1]] = 1;
+        for (int i = 2; i <= n; ++i)
+        {
+            rk[sa[i]] = tmp[sa[i]] == tmp[sa[i - 1]] && tmp[sa[i] + k] == tmp[sa[i - 1] + k] ? m : ++m;
+        }
+        if (n == m)
+        {
+            break;
+        }
+    }
+    for (int i = 1; i <= n; ++i)
+    {
+        if (rk[i] == 1)
+        {
+            continue;
+        }
+        if (h)
+        {
+            --h;
+        }
+        int lst = sa[rk[i] - 1];
+        while (i + h <= n && lst + h <= n && s[lst + h] == s[i + h])
+        {
+            ++h;
+        }
+        height[0][rk[i]] = h;
+    }
+    for (int i = 1; 1 << i <= n; ++i)
+    {
+        for (int j = 1; j + (1 << i) - 1 <= n; ++j)
+        {
+            height[i][j] = min(height[i - 1][j], height[i - 1][j + (1 << i >> 1)]);
+        }
+    }
+    for (int i = 2; i <= n; ++i)
+    {
+        lg[i] = lg[i - 1] + (lowbit(i) == i);
+    }
+    ans = n * (n + 1) >> 1;
+    for (int i = 1; i <= n; ++i)
+    {
+        if (height[0][i] == 0)
+        {
+            a.clear(1, n);
+            b.clear(1, n);
+            continue;
+        }
+        int tim = a.query(height[0][i] + 1, n) + 1;
+        a.clear(height[0][i] + 1, n);
+        b.clear(height[0][i] + 1, n);
+        a.add(height[0][i], tim);
+        b.add(height[0][i], tim * height[0][i]);
+        ans += b.query(1, height[0][i]);
+    }
+    cout << ans << endl;
+    return 0;
+}
+
+//This Code was made by Chinese_zjc_.
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <algorithm>
+#include <vector>
+#include <bitset>
+#include <cmath>
+#include <queue>
+#include <stack>
+#include <list>
+#include <string>
+#include <cstring>
+#include <cstdio>
+#include <cstdlib>
+#include <cctype>
+#include <map>
+#include <set>
+#include <ctime>
+// #include<windows.h>
+// #define debug
+#define int long long
+#define double long double
+#define subtask_work(a) a::check() ? a::solve(), exit(0) : void(0)
+using namespace std;
+const double PI = acos(-1);
+const double eps = 0.0000000001;
+const int INF = 0x3fffffffffffffff;
+int n, m, sa[400005], rk[400005], tim, tmp[400005], sum[400005], height[400005], h, lg[400005], ans, ST[20][400005];
+string s;
+int lcp(int L, int R)
+{
+    if (L < 0 || R < 0 || L > n || R > n)
+    {
+        return 0;
+    }
+    if (L == R)
+    {
+        return n - L + 1;
+    }
+    L = rk[L];
+    R = rk[R];
+    if (L > R)
+    {
+        swap(L, R);
+    }
+    ++L;
+    int len = lg[R - L + 1];
+    return min(ST[len][L], ST[len][R - (1 << len) + 1]);
+}
+int lowbit(int now)
+{
+    return now & -now;
+}
+signed main()
+{
+    ios::sync_with_stdio(false);
+    cin >> s;
+    if (s.length() == 1)
+    {
+        cout << 1 << endl;
+        return 0;
+    }
+    n = s.length();
+    s = ' ' + s;
+    m = 128;
+    for (int i = 1; i <= n; ++i)
+    {
+        ++sum[rk[i] = s[i]];
+    }
+    for (int i = 1; i <= m; ++i)
+    {
+        sum[i] += sum[i - 1];
+    }
+    for (int i = n; i; --i)
+    {
+        sa[sum[rk[i]]--] = i;
+    }
+    for (int k = 1; k <= n; k <<= 1)
+    {
+        tim = 0;
+        for (int i = n - k + 1; i <= n; ++i)
+        {
+            tmp[++tim] = i;
+        }
+        for (int i = 1; i <= n; ++i)
+        {
+            if (sa[i] > k)
+            {
+                tmp[++tim] = sa[i] - k;
+            }
+        }
+        for (int i = 1; i <= m; ++i)
+        {
+            sum[i] = 0;
+        }
+        for (int i = 1; i <= n; ++i)
+        {
+            ++sum[rk[i]];
+        }
+        for (int i = 1; i <= m; ++i)
+        {
+            sum[i] += sum[i - 1];
+        }
+        for (int i = n; i; --i)
+        {
+            sa[sum[rk[tmp[i]]]--] = tmp[i];
+        }
+        swap(rk, tmp);
+        rk[sa[1]] = m = 1;
+        for (int i = 2; i <= n; ++i)
+        {
+            rk[sa[i]] = (tmp[sa[i]] == tmp[sa[i - 1]] && tmp[sa[i] + k] == tmp[sa[i - 1] + k] ? m : ++m);
+        }
+        if (n == m)
+        {
+            break;
+        }
+    }
+    for (int i = 1; i <= n; ++i)
+    {
+        if (rk[i] == 1)
+        {
+            continue;
+        }
+        if (h)
+        {
+            --h;
+        }
+        int lst = sa[rk[i] - 1];
+        while (lst + h <= n && i + h <= n && s[i + h] == s[lst + h])
+        {
+            ++h;
+        }
+        height[rk[i]] = h;
+    }
+    for (int i = 2; i <= n; ++i)
+    {
+        lg[i] = lg[i - 1] + (lowbit(i) == i);
+    }
+    for (int i = 1; i <= n; ++i)
+    {
+        ST[0][i] = height[i];
+    }
+    for (int i = 1; i <= lg[n]; ++i)
+    {
+        for (int j = 1; j + (1 << i) - 1 <= n; ++j)
+        {
+            ST[i][j] = min(ST[i - 1][j], ST[i - 1][j + (1 << i >> 1)]);
+        }
+    }
+    for (int len = 1; len <= n; ++len)
+    {
+        for (int i = len + 1; i <= n; i += len)
+        {
+            int tmp = lcp(i - len, i);
+            ans = max(ans, 1 + tmp / len);
+            tmp %= len;
+            ans = max(ans, 1 + lcp(i - len - (len - tmp), i - (len - tmp)) / len);
+        }
+    }
+    cout << ans << endl;
+    return 0;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------

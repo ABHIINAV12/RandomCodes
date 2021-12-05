@@ -1,3 +1,6 @@
+
+// If your money aint breaking after you give it to me, my code aint breaking after I give it to you.
+
 // -----------------------------------------------------------------------------------------------------------------------------------
 
 // sparse table implementation
@@ -6240,3 +6243,1239 @@ signed main()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------------
+
+// Sliding window median. Leetcode
+
+class Solution {
+public:
+    vector<double> medianSlidingWindow(vector<int>& num, int k) {
+        vector<double> ret;
+        vector<long long> nums;
+        for(auto it : num) nums.push_back(it);
+        multiset<long long> l,r;
+        int rs = k/2;
+        int ls = k - rs;
+        int n = nums.size();
+        for(int i=0;i<k;++i) l.insert(nums[i]);
+        int take = k/2;
+        while(take--){
+            r.insert(*l.rbegin());
+            l.erase(l.find(*l.rbegin()));
+        }
+        if(k&1) ret.push_back(*l.rbegin());
+        else ret.push_back((*l.rbegin() + *r.begin())/2.0);
+        for(int i=k;i<n;++i){
+            if(l.find(nums[i-k])!=l.end()) l.erase(l.find(nums[i-k]));
+            else r.erase(r.find(nums[i-k]));
+            r.insert(nums[i]);
+            while(r.size()>rs){
+                l.insert(*r.begin());
+                r.erase(r.find(*r.begin()));
+            }while(l.size()>ls){
+                r.insert(*l.rbegin());
+                l.erase(l.find(*l.rbegin()));
+            }while(r.size()!=0 && *l.rbegin()>*r.begin()){
+                int t1 = *l.rbegin();
+                int t2 = *r.begin();
+                l.insert(t2); r.insert(t1);
+                l.erase(l.find(t1)); r.erase(r.find(t2));
+            }
+            if(k&1) ret.push_back(*l.rbegin());
+            else ret.push_back((*l.rbegin() + *r.begin())/2.0);
+        }
+        return ret;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Find Median from Data Stream. Leetcode
+
+class MedianFinder {
+private:
+vector<long long> nums;        
+multiset<long long> l,r;   
+int cnt;
+public:
+    MedianFinder() {
+       cnt = 0; 
+    }
+    void addNum(int num) {
+        r.insert(num);
+        ++cnt;
+        int rs = cnt/2;
+        int ls = cnt - rs;
+        while(r.size()>rs){
+            l.insert(*r.begin());
+            r.erase(r.find(*r.begin()));
+        }while(l.size()>ls){
+            r.insert(*l.rbegin());
+            l.erase(l.find(*l.rbegin()));
+        }while(r.size()!=0 && *l.rbegin()>*r.begin()){
+            int t1 = *l.rbegin();
+            int t2 = *r.begin();
+            l.insert(t2); r.insert(t1);
+            l.erase(l.find(t1)); r.erase(r.find(t2));
+        }
+    }
+    double findMedian() {
+        int pre = l.size() + r.size();
+        if(pre&1) return *l.rbegin();
+        return (*l.rbegin() + *r.begin())/2.0;
+    }
+};
+
+/**
+ * Your MedianFinder object will be instantiated and called as such:
+ * MedianFinder* obj = new MedianFinder();
+ * obj->addNum(num);
+ * double param_2 = obj->findMedian();
+ */
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// findCriticalAndPseudoCriticalEdges , leetcode.
+
+class UnionFind {
+    vector<int> component;
+    int distinctComponents;
+public:
+    UnionFind(int n) {
+        distinctComponents = n;
+        for (int i=0; i<=n; i++) 
+            component.push_back(i);
+    }
+    bool unite(int a, int b) {       
+        if (findComponent(a) == findComponent(b)) return false;
+        component[findComponent(a)] = b;
+        distinctComponents--;
+        return true;
+    } 
+    int findComponent(int a) {
+        if (component[a] != a) {
+            component[a] = findComponent(component[a]);
+        }
+        return component[a];
+    } 
+    bool united() {return distinctComponents == 1;}
+};
+
+class Solution {
+public:
+    int mst(int n,vector<vector<int>>& edges,int id){
+        vector<array<int,3>> ans;
+        for(int i=0;i<edges.size();++i) if(i==id) continue;
+        else ans.push_back({edges[i][2],edges[i][1],edges[i][0]});
+        sort(ans.begin(),ans.end());
+        UnionFind par(n);
+        int cost = 0;
+        for(auto it : ans)
+            if(par.unite(it[1],it[2])) cost+=it[0]; 
+        if(!par.united()) cost = INT_MAX;
+        return cost;
+    }
+    int incl(int n,vector<vector<int>>& edges,int id){
+        vector<array<int,3>> ans;
+        UnionFind par(n);
+        int cost = 0;
+        for(int i=0;i<edges.size();++i) if(i==id) {
+            cost+=edges[i][2];
+            par.unite(edges[i][0],edges[i][1]);
+        } else ans.push_back({edges[i][2],edges[i][1],edges[i][0]});
+        sort(ans.begin(),ans.end());
+        for(auto it : ans)
+            if(par.unite(it[1],it[2])) cost+=it[0]; 
+        if(!par.united()) cost = INT_MAX;
+        return cost;
+    }
+    vector<vector<int>> findCriticalAndPseudoCriticalEdges(int n, vector<vector<int>>& edges) {
+        int ans = mst(n,edges,-1);
+        set<int> cric, non;
+        for(int i=0;i<edges.size();++i){
+            int dis = mst(n,edges,i);
+            if(dis!=ans) cric.insert(i);
+            else non.insert(i);
+        }
+        for(int i=0;i<edges.size();++i) if(incl(n,edges,i)!=ans && non.find(i)!=non.end()) non.erase(non.find(i));
+        vector<int> tp,tp1;
+        for(auto it : cric) tp.push_back(it);
+        for(auto it : non) tp1.push_back(it);
+        return {tp,tp1};
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// TreeAncestor, leetcode.
+
+class TreeAncestor {
+private:
+    vector<vector<int>> pre;
+public:
+    TreeAncestor(int n, vector<int>& parent) {
+        pre.push_back(parent);
+        for(int i=1;i<20;++i){
+            vector<int> dp;    
+            for(int j=0;j<parent.size();++j){
+                int im = pre[i-1][j];
+                if(im!=-1) im = pre[i-1][im];
+                dp.push_back(im);
+            }
+            pre.push_back(dp);
+        }
+    }
+    int getKthAncestor(int node, int k) {
+        for(int i=19;i>=0;--i) if((k>>i)&1){
+            node = pre[i][node];
+            if(node==-1) break;
+        }
+        return node;
+    }
+};
+
+/**
+ * Your TreeAncestor object will be instantiated and called as such:
+ * TreeAncestor* obj = new TreeAncestor(n, parent);
+ * int param_1 = obj->getKthAncestor(node,k);
+ */
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// findMaxValueOfEquation, leetcode
+
+class Solution {
+public:
+    int findMaxValueOfEquation(vector<vector<int>>& points, int k) {
+        int ret = INT_MIN, r = 0;
+        priority_queue<pair<int,int>> q;
+        for(int i=0;i<points.size();++i){
+            while(r<=i) q.push({points[r][0]+points[r][1],points[r][0]}),++r;
+            while(r<points.size() && (points[r][0]-points[i][0])<=k) q.push({points[r][0]+points[r][1],points[r][0]}),++r;
+            while(q.size()!=0 && q.top().second<=points[i][0]) q.pop();
+            if(q.size())
+                ret = max(ret,-points[i][0] + points[i][1] + q.top().first);
+        }
+        return ret;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Best Position for a Service Centre, leetcode
+
+class Solution {
+public:
+    double getMinDistSum(vector<vector<int>>& p) {
+        double x=0,y=0;
+        int n = p.size();
+        for(int i=0;i<n;++i) x += p[i][0], y += p[i][1];
+        x /= n; y /= n;
+        int dx[4] = {-1,1,0,0};
+        int dy[4] = {0,0,-1,1};
+        double scale = 1.0, eps = 0.0000001; 
+        double dis = 0;
+        for(int i=0;i<n;++i) 
+            dis += sqrt((p[i][0]-x)*(p[i][0]-x) + (p[i][1]-y)*(p[i][1]-y));
+        while(abs(scale-eps)>eps){
+            bool down = 1;
+            for(int k=0;k<4;++k){
+                double new_dis = 0, new_x = scale * dx[k] + x , new_y = scale * dy[k] + y;
+                for(int i=0;i<n;++i) 
+                    new_dis += sqrt((p[i][0]-new_x)*(p[i][0]-new_x) + (p[i][1]-new_y)*(p[i][1]-new_y));
+                if(abs(new_dis-dis)>=eps && new_dis < dis){
+                    down = 0;
+                    dis = new_dis;
+                    x = new_x;
+                    y = new_y;
+                }
+            }
+            if(down) scale /= 10;
+        }
+        return dis;
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// https://www.codechef.com/LTIME101A/problems/MAXSEG, https://www.codechef.com/viewsolution/53219560
+
+#include <bits/stdc++.h>
+#define mx 500015
+#define LL long long
+#define endl '\n'
+using namespace std;
+
+int n, q, N, L, R;
+int a[mx], b[mx], pa[24][mx], id[mx], sz[mx], ad[24][mx];
+LL sum[mx];
+vector<pair<LL, int>>v[mx];
+
+int main(){
+#ifndef ONLINE_JUDGE
+    freopen("in1.txt", "r", stdin);
+#endif
+
+    ios::sync_with_stdio(0);
+    cin.tie(0); cout.tie(0);
+
+    int tc, i, j, res, pos;
+    for(cin >> tc; tc --;){
+        cin >> n >> q;
+        for(i = 1; i <= n; i ++) cin >> a[i], sum[i] = sum[i - 1] + a[i];
+        for(i = 1; i <= n; i ++) cin >> b[i];
+        for(i = 1; i <= n; i ++){
+            id[i] = id[i - 1];
+            id[i] += b[i];
+            v[id[i]].push_back({sum[i], i});
+        }
+        N = id[n];
+        for(i = 1; i <= N; i ++) sort(v[i].begin(), v[i].end()), sz[i] = v[i].size();
+        int nxt, now;
+        for(i = 1; i <= n; i ++){
+            now = id[i - 1];
+            if(now == N) {
+                pa[0][i] = n + 2; ad[0][i] = 0; continue;
+            }
+            nxt = now + 1;
+            j = lower_bound(v[nxt].begin(), v[nxt].end(), make_pair(sum[i - 1], 0)) - v[nxt].begin();
+            if(j == sz[nxt]) {
+                pa[0][i] = v[nxt][0].second + 1, ad[0][i] = 0;
+            }
+            else pa[0][i] = v[nxt][j].second + 1, ad[0][i] = 1;
+//          cerr << i << " : " << pa[0][i] << " " << ad[0][i] << endl;
+        }
+        pa[0][n + 1] = n + 2;
+        pa[0][n + 2] = n + 2;
+        for(j = 1; j <= 20; j ++){
+            pa[j][n + 1] = n + 2;
+            pa[j][n + 2] = n + 2;
+            for(i = 1; i <= n; i ++){
+                pa[j][i] = pa[j - 1][pa[j - 1][i]];
+                ad[j][i] = ad[j - 1][i] + ad[j - 1][pa[j - 1][i]];
+            }
+        }
+        
+        while(q --){
+            cin >> L >> R;
+            if(id[L - 1] == id[R]) {
+                cout << 0 << endl; continue;
+            }
+            res = 0;
+            now = L;
+            for(i = 20; i >= 0; i --){
+                nxt = pa[i][now];
+//              cerr << i << " : " << now << " . " << pa[i][now] << " ,, " << res << endl;
+                if(pa[0][nxt] > R + 1) continue;
+                res += ad[i][now];
+//              cerr << i << " : " << now << " . " << pa[i][now] << " ,, " << res << endl;
+                now = pa[i][now];
+            }
+            nxt = pa[0][now];
+            if(id[nxt - 1] != id[R]){
+                res += ad[0][now];
+                now = pa[0][now];
+                if(sum[R] >= sum[now - 1]) res ++;
+            }
+            else{
+                if(sum[R] >= sum[now - 1]) res ++;
+            }
+            cout << res << endl;
+        }
+        
+        for(i = 1; i <= N; i ++) v[i].clear();
+        for(j = 0; j <= 20; j ++) for(i = 1; i <= n + 5; i ++) pa[j][i] = ad[j][i] = 0;
+        for(i = 0; i <= n + 5; i ++) id[i] = 0;
+    }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+// ABC Identity Atcoder Grand 055
+
+#ifndef LOCAL
+#pragma GCC optimize ("Ofast")
+#pragma GCC optimize ("unroll-loops")
+#endif
+
+#include <bits/stdc++.h>
+using namespace std;
+
+using ll=long long;
+#define int ll
+
+#define rng(i,a,b) for(int i=int(a);i<int(b);i++)
+#define rep(i,b) rng(i,0,b)
+#define gnr(i,a,b) for(int i=int(b)-1;i>=int(a);i--)
+#define per(i,b) gnr(i,0,b)
+#define pb push_back
+#define eb emplace_back
+#define a first
+#define b second
+#define bg begin()
+#define ed end()
+#define all(x) x.bg,x.ed
+#define si(x) int(x.size())
+#ifdef LOCAL
+#define dmp(x) cerr<<__LINE__<<" "<<#x<<" "<<x<<endl
+#else
+#define dmp(x) void(0)
+#endif
+
+template<class t,class u> bool chmax(t&a,u b){if(a<b){a=b;return true;}else return false;}
+template<class t,class u> bool chmin(t&a,u b){if(b<a){a=b;return true;}else return false;}
+
+template<class t> using vc=vector<t>;
+template<class t> using vvc=vc<vc<t>>;
+
+using pi=pair<int,int>;
+using vi=vc<int>;
+
+template<class t,class u>
+ostream& operator<<(ostream& os,const pair<t,u>& p){
+    return os<<"{"<<p.a<<","<<p.b<<"}";
+}
+
+template<class t> ostream& operator<<(ostream& os,const vc<t>& v){
+    os<<"{";
+    for(auto e:v)os<<e<<",";
+    return os<<"}";
+}
+
+#define mp make_pair
+#define mt make_tuple
+#define one(x) memset(x,-1,sizeof(x))
+#define zero(x) memset(x,0,sizeof(x))
+#ifdef LOCAL
+void dmpr(ostream&os){os<<endl;}
+template<class T,class... Args>
+void dmpr(ostream&os,const T&t,const Args&... args){
+    os<<t<<" ";
+    dmpr(os,args...);
+}
+#define dmp2(...) dmpr(cerr,__LINE__,##__VA_ARGS__)
+#else
+#define dmp2(...) void(0)
+#endif
+
+using uint=unsigned;
+using ull=unsigned long long;
+
+template<class t,size_t n>
+ostream& operator<<(ostream&os,const array<t,n>&a){
+    return os<<vc<t>(all(a));
+}
+
+template<int i,class T>
+void print_tuple(ostream&,const T&){
+}
+
+template<int i,class T,class H,class ...Args>
+void print_tuple(ostream&os,const T&t){
+    if(i)os<<",";
+    os<<get<i>(t);
+    print_tuple<i+1,T,Args...>(os,t);
+}
+
+template<class ...Args>
+ostream& operator<<(ostream&os,const tuple<Args...>&t){
+    os<<"{";
+    print_tuple<0,tuple<Args...>,Args...>(os,t);
+    return os<<"}";
+}
+
+template<class t>
+void print(t x,int suc=1){
+    cout<<x;
+    if(suc==1)
+        cout<<"\n";
+    if(suc==2)
+        cout<<" ";
+}
+
+ll read(){
+    ll i;
+    cin>>i;
+    return i;
+}
+
+vi readvi(int n,int off=0){
+    vi v(n);
+    rep(i,n)v[i]=read()+off;
+    return v;
+}
+
+pi readpi(int off=0){
+    int a,b;cin>>a>>b;
+    return pi(a+off,b+off);
+}
+
+template<class t,class u>
+void print(const pair<t,u>&p,int suc=1){
+    print(p.a,2);
+    print(p.b,suc);
+}
+
+template<class T>
+void print(const vector<T>&v,int suc=1){
+    rep(i,v.size())
+        print(v[i],i==int(v.size())-1?suc:2);
+}
+
+template<class T>
+void print_offset(const vector<T>&v,ll off,int suc=1){
+    rep(i,v.size())
+        print(v[i]+off,i==int(v.size())-1?suc:2);
+}
+
+template<class T,size_t N>
+void print(const array<T,N>&v,int suc=1){
+    rep(i,N)
+        print(v[i],i==int(N)-1?suc:2);
+}
+
+string readString(){
+    string s;
+    cin>>s;
+    return s;
+}
+
+template<class T>
+T sq(const T& t){
+    return t*t;
+}
+
+//#define CAPITAL
+void yes(bool ex=true){
+    #ifdef CAPITAL
+    cout<<"YES"<<"\n";
+    #else
+    cout<<"Yes"<<"\n";
+    #endif
+    if(ex)exit(0);
+    #ifdef LOCAL
+    cout.flush();
+    #endif
+}
+void no(bool ex=true){
+    #ifdef CAPITAL
+    cout<<"NO"<<"\n";
+    #else
+    cout<<"No"<<"\n";
+    #endif
+    if(ex)exit(0);
+    #ifdef LOCAL
+    cout.flush();
+    #endif
+}
+void possible(bool ex=true){
+    #ifdef CAPITAL
+    cout<<"POSSIBLE"<<"\n";
+    #else
+    cout<<"Possible"<<"\n";
+    #endif
+    if(ex)exit(0);
+    #ifdef LOCAL
+    cout.flush();
+    #endif
+}
+void impossible(bool ex=true){
+    #ifdef CAPITAL
+    cout<<"IMPOSSIBLE"<<"\n";
+    #else
+    cout<<"Impossible"<<"\n";
+    #endif
+    if(ex)exit(0);
+    #ifdef LOCAL
+    cout.flush();
+    #endif
+}
+
+constexpr ll ten(int n){
+    return n==0?1:ten(n-1)*10;
+}
+
+const ll infLL=LLONG_MAX/3;
+
+#ifdef int
+const int inf=infLL;
+#else
+const int inf=INT_MAX/2-100;
+#endif
+
+int topbit(signed t){
+    return t==0?-1:31-__builtin_clz(t);
+}
+int topbit(ll t){
+    return t==0?-1:63-__builtin_clzll(t);
+}
+int botbit(signed a){
+    return a==0?32:__builtin_ctz(a);
+}
+int botbit(ll a){
+    return a==0?64:__builtin_ctzll(a);
+}
+int popcount(signed t){
+    return __builtin_popcount(t);
+}
+int popcount(ll t){
+    return __builtin_popcountll(t);
+}
+bool ispow2(int i){
+    return i&&(i&-i)==i;
+}
+ll mask(int i){
+    return (ll(1)<<i)-1;
+}
+
+bool inc(int a,int b,int c){
+    return a<=b&&b<=c;
+}
+
+template<class t> void mkuni(vc<t>&v){
+    sort(all(v));
+    v.erase(unique(all(v)),v.ed);
+}
+
+ll rand_int(ll l, ll r) { //[l, r]
+    #ifdef LOCAL
+    static mt19937_64 gen;
+    #else
+    static mt19937_64 gen(chrono::steady_clock::now().time_since_epoch().count());
+    #endif
+    return uniform_int_distribution<ll>(l, r)(gen);
+}
+
+template<class t>
+void myshuffle(vc<t>&a){
+    rep(i,si(a))swap(a[i],a[rand_int(0,i)]);
+}
+
+template<class t>
+int lwb(const vc<t>&v,const t&a){
+    return lower_bound(all(v),a)-v.bg;
+}
+
+vvc<int> readGraph(int n,int m){
+    vvc<int> g(n);
+    rep(i,m){
+        int a,b;
+        cin>>a>>b;
+        //sc.read(a,b);
+        a--;b--;
+        g[a].pb(b);
+        g[b].pb(a);
+    }
+    return g;
+}
+
+vvc<int> readTree(int n){
+    return readGraph(n,n-1);
+}
+
+void slv(){
+    int n;cin>>n;
+    string s;cin>>s;
+    vi pos[3][3]{};
+    rep(i,3*n)pos[i/n][s[i]-'A'].pb(i);
+    vi p{0,1,2};
+    vi ans(3*n);
+    int step=1;
+    do{
+        int mn=inf;
+        rep(i,3)chmin(mn,si(pos[i][p[i]]));
+        rep(i,3){
+            rep(_,mn){
+                int j=pos[i][p[i]].back();
+                pos[i][p[i]].pop_back();
+                ans[j]=step;
+            }
+        }
+        step++;
+    }while(next_permutation(all(p)));
+    rep(i,3*n)cout<<ans[i];
+    cout<<endl;
+}
+
+signed main(){
+    cin.tie(0);
+    ios::sync_with_stdio(0);
+    cout<<fixed<<setprecision(20);
+    
+    //int t;cin>>t;rep(_,t)
+    slv();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Longest Increasing Subsequence.
+
+multiset < int > s;
+multiset < int > :: iterator it;
+FOR(i, 1, n){
+    s.insert(a[i]);
+    it = s.upper_bound(a[i]);
+    if(it != s.end())
+        s.erase(it);
+}
+cout << s.size() << endl;
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Strictly Longest Increasing Subsequence.
+
+multiset < int > s;
+multiset < int > :: iterator it;
+FOR(i, 1, n){
+    s.insert(a[i]);
+    it = s.lower_bound(a[i]);
+    it++;
+    if(it != s.end())
+        s.erase(it);
+}
+cout << s.size() << endl;
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Weekly Contest 267  
+
+// A):
+
+class Solution{
+  public:
+  int timeRequiredToBuy(vector<int>& A, int K){
+    int res = 0;
+    int N = A.size();
+    for(;;){
+      int i;
+      for(i=(0);i<(N);i++){
+        if(A[i] > 0){
+          res++;
+          A[i]--;
+        }
+        if(A[K]==0){
+          goto KL2GvlyY;
+        }
+      }
+    }
+    KL2GvlyY:;
+    return res;
+  }
+};
+
+// B):
+
+int sz;
+ListNode*arr[200000];
+class Solution{
+  public:
+  ListNode* reverseEvenLengthGroups(ListNode* head){
+    int i;
+    int j;
+    int k;
+    sz = 0;
+    while(head != NULL){
+      arr[sz++] = head;
+      head = head->next;
+    }
+    arr[sz] = NULL;
+    i = k = 0;
+    while(i < sz){
+      k++;
+      j =min_L(sz, i + k);
+      if( (j - i)%2==0 ){
+        reverse(arr+i, arr+j);
+      }
+      i = j;
+    }
+    for(i=(0);i<(sz);i++){
+      arr[i]->next = arr[i+1];
+    }
+    return arr[0];
+  }
+};
+
+// C):
+
+class Solution {
+public:
+    string decodeCiphertext(string s, int m) {
+        string res;
+        int n = s.size();
+        vector<string> a;
+        int i, j, x, y, col = n / m, p = 0;
+        for (i = 0; i < m; ++i){
+            a.push_back("");
+            for (j = 0; j < col; ++j) a[i].push_back(s[p++]);
+        }
+        
+        x = y = 0;
+        while (y < col){
+            res.push_back(a[x][y]);
+            ++x;
+            ++y;
+            if (x >= m){
+                y = y - x + 1;
+                x = 0;
+            }
+        }
+        
+        int L = res.size() - 1;
+        while (L >= 0 && res[L] == ' ') --L;
+        return res.substr(0, L + 1);
+    }
+};
+ 
+// D):
+
+struct UnionFind {
+    int n, cc, *u;
+    UnionFind() : n(0), cc(0), u(NULL) {}
+    UnionFind(int n_) : n(n_), cc(n_) {
+    u = new int[n_];
+    memset(u, -1, sizeof (int) * n);
+    }
+    UnionFind(const UnionFind &y) : n(y.n), cc(y.cc) {
+    u = new int[y.n];
+    memcpy(u, y.u, sizeof (int) * n);
+    }
+    ~UnionFind() {
+    delete[] u; u = NULL;
+    n = cc = 0;
+    }
+    friend void swap(UnionFind &x, UnionFind &y) {
+    swap(x.n, y.n); swap(x.cc, y.cc); swap(x.u, y.u);
+    }
+    UnionFind& operator=(UnionFind y) { 
+    swap(*this, y);
+    return *this;
+    }
+    int root(int x) {
+    int y = x, t;
+    while (u[y] >= 0) y = u[y];
+    while (x != y) { t = u[x]; u[x] = y; x = t; }
+    return y;
+    }
+    bool link(int x, int y) {
+    x = root(x); y = root(y);
+    if (x == y) return false;
+    if (u[y] < u[x]) swap(x, y);
+    u[x] += u[y]; u[y] = x; cc--;
+    return true;
+    }
+    bool same(int x, int y) { return root(x) == root(y); }
+    int count_node(int x) { return -u[root(x)]; }
+    int count_tree() { return cc; }
+};
+
+class Solution {
+public:
+    vector<bool> friendRequests(int n, vector<vector<int>>& restrictions, vector<vector<int>>& requests) {
+    vector<bool> ans(requests.size());
+    UnionFind U(n);
+
+    REP (i, requests.size()) {
+        int u = U.root(requests[i][0]);
+        int v = U.root(requests[i][1]);
+        if (u > v) swap(u, v);
+
+        bool yes = true;
+        REP (j, restrictions.size()) {
+        int x = U.root(restrictions[j][0]);
+        int y = U.root(restrictions[j][1]);
+        if (x > y) swap(x, y);
+
+        if (x == u && y == v) {
+            yes = false;
+            break;
+        }
+        }
+
+        if (yes) {
+        ans[i] = true;
+        U.link(u, v);
+        } else {
+        ans[i] = false;
+        }
+    }
+    return ans;
+        
+    }
+};
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// codechef starter 17.
+//  Yet Another Counting Problem 
+
+const int N = 20;
+vector<vector<ll>> dp;
+ll a[N];
+ll n;
+ll f(ll i, ll mask){
+    if(i == n){
+        return 1;
+    }
+    if(dp[mask][i] != -1){
+        return dp[mask][i];
+    }
+    ll res = 0;
+    //ignore this element
+    res += f(i + 1, mask);
+    //start new subsequence
+    res += f(i + 1, mask | (1 << a[i]));
+    //continue from previous
+    for(int j = 0; j < a[i]; j++){
+        if(mask & (1 << j)){
+            ll cmask = mask;
+            cmask ^= (1 << j);
+            res += f(i + 1, cmask | (1 << a[i]));  // next state only depends on which are at the top.
+            res %= MOD;
+        }
+    }
+    return dp[mask][i] = res % MOD;
+} 
+int main() {
+    ll _T = 1;    
+    cin >> _T;
+    while (_T--) {
+        cin >> n;
+        for(int i = 0; i < n; i++){
+            cin >> a[i];
+            a[i]--;
+        }
+        dp = vector<vector<ll>>(1 << n, vector<ll>(n, -1));
+        ll ans = f(0, 0);
+        cout << ans << "\n";
+    }
+    return 0;
+}
+
+// String Game
+
+void solve()
+{
+    int n;
+    cin>>n;
+    string s;
+    cin>>s;
+    int cnt0=0,cnt1=0;
+    for(auto ch:s)
+    {
+        if(ch=='0')
+            cnt0++;
+        else
+            cnt1++;
+    }
+    if(min(cnt0,cnt1)==0)
+    {
+        cout<<"Bob\n";
+        return;
+    }
+    if(min(cnt0,cnt1)==1)
+    {
+        cout<<"Alice\n";
+        return;
+    }
+    if(n%2==1)
+        cout<<"Alice\n";
+    else
+        cout<<"Bob\n";
+}
+
+// Binary Inversion
+
+#include<bits/stdc++.h>
+using namespace std;
+void solve() {
+  int n, m; 
+  cin >> n >> m;
+  vector<string> s(n);
+  vector<pair<int, int>> v;
+  for (int i = 0; i < n; i++) {
+    cin >> s[i];
+    int ones = count(s[i].begin(), s[i].end(), '1');
+    v.push_back({ones, i});
+  }
+  sort(v.begin(), v.end());
+  string cur;
+  for (int i = 0; i < n; i++) {
+    for (auto u : s[v[i].second]) {
+      cur.push_back(u);
+    }
+  }
+  int ones = 0;
+  long long ans = 0;
+  for (int i = 0; i < n * m; i++) {
+    if (cur[i] == '1') ones++;
+    else ans += ones;
+  }
+  cout << ans << '\n';
+}
+
+signed main() {
+  int t = 1;
+  cin >> t;
+  for (int i = 1; i <= t; i++) solve();
+  return 0;
+}
+
+// Partition It
+
+#include <bits/stdc++.h>
+#define maxn 100007
+using namespace std;
+
+vector<int> primes;
+bool isp[maxn];
+
+void seive() {
+    for(int i = 2; i < maxn; i++) {
+        if(isp[i]) continue;
+        primes.push_back(i);
+        for(int j = i*2; j < maxn; j += i)
+            isp[j] = 1;
+    }
+}
+
+int main() {
+    int t;
+    cin >> t;
+    seive();
+    int sm = 0;
+    while(t--) {
+        int n, k;
+        cin >> n >> k;
+        sm += n;
+        int pr = 1;
+        if(k > n/2)
+            k = n - k, pr = 0;
+        int first = upper_bound(primes.begin(), primes.end(), n/2) - primes.begin();
+        int last = upper_bound(primes.begin(), primes.end(), n) - primes.begin();
+        int count = last - first;
+        //cout << count << "\n";
+        if(k <= count + 1) {
+            cout << "YES\n";
+            int grp[n + 1];
+            memset(grp, 0, sizeof(grp));
+            k--;
+            grp[1] = 1;
+            while(k) {
+                k--;
+                grp[primes[first]] = 1;
+                first++;
+            }
+            assert(first <= last + 1);
+            for(int i = 1; i <= n; i++)
+                if(grp[i] == pr)
+                    cout << i << " ";
+            cout << "\n";
+        } else {
+            cout << "NO\n";
+        }
+    }
+}
+
+// GCD of Prefixes
+
+void solve(int TC) throws Exception{
+    int N = ni();
+    int[] B = new int[N];
+    for(int i = 0; i< N; i++)B[i] = ni();
+    boolean yes = true;
+    for(int i = 1; i< N; i++)yes &= B[i-1]%B[i] == 0;
+    if(yes){
+        for(int x:B)p(x+" ");pn("");
+    }else pn(-1);
+}
+
+// Find the Special Node
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// Sliding window minimum
+
+while(K > 0){
+    int d = (K + 1) / 2;
+    for(i=0;i+d<N;i++) A[i] = min(A[i], A[i+d]);
+    K -= d;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+// 1612G - Max Sum Array codeforces.
+// 
+
+#include <cstdio>
+using namespace std;
+ 
+#define ll long long
+const int MOD = 1000000007;
+ll fact[1000005], d[2000005];
+ 
+ll f(ll a, ll b) { // Return sum of elements in range [a, b]
+    return ((b-a+1)*(a+b)/2)%MOD;
+}
+ 
+int main() {
+    fact[0] = 1;
+    for (int i=1; i<=1000000; i++) fact[i] = (fact[i-1]*i)%MOD;
+    int m, x;
+    ll res = 0, num = 1, cur = 0;
+    scanf("%d", &m);
+    while (m--) {
+        scanf("%d", &x);
+        // Instead of using a map, I will use an array and shift all numbers by 1000001 so that no index is negative
+        d[1000002-x]++;
+        d[1000002+x]--;
+    }
+    for (int i=2; i<=2000000; i++) {
+        d[i] += d[i-2];
+        res = (res+f(cur+1, cur+d[i])*(i-1000001))%MOD;
+        cur += d[i];
+        num = (num*fact[d[i]])%MOD;
+    }
+    printf("%lld %lld\n", res, num);
+}
+
+//1612F - Armor and Weapons codeforces.
+
+#include<bits/stdc++.h>
+using namespace std;
+int n, m;
+#define x first
+#define y second
+typedef pair<int, int> comb;
+comb norm(const comb& a){
+    return make_pair(min(a.x, n), min(a.y, m));
+}
+
+bool good(const comb& a){
+    return a.x == n || a.y == m;
+}
+
+bool comp(const comb& a, const comb& b){
+    if(a.x != b.x)
+        return a.x > b.x;
+    return a.y > b.y;
+}
+
+int main(){
+    scanf("%d %d", &n, &m);
+    int v;
+    scanf("%d", &v);
+    set<comb> s;
+    for(int i = 0; i < v; i++)
+    {
+        int x, y;
+        scanf("%d %d", &x, &y);
+        s.insert(make_pair(x, y));
+    }
+    int steps = 0;
+    vector<comb> cur;
+    cur.push_back(make_pair(1, 1));
+    while(true)
+    {
+        if(cur[0] == make_pair(n, m))
+            break;
+        vector<comb> ncur;
+        for(auto x : cur)
+        {
+            int sum = x.x + x.y;
+            if(s.count(x))
+                sum++;
+            comb z = x;
+            z.x = sum;
+            ncur.push_back(norm(z));
+            z = x;
+            z.y = sum;
+            ncur.push_back(norm(z));
+        }
+        sort(ncur.begin(), ncur.end(), comp);
+        int mx = 0;
+        vector<comb> ncur2;
+        for(auto x : ncur)
+        {
+            if(x.y <= mx) continue;
+            mx = max(mx, x.y);
+            ncur2.push_back(x);
+        }
+        cur = ncur2;
+        steps++;
+    }
+    printf("%d\n", steps);
+}
+
+
+// codeforces : maximum possible sum of gcd of prefixes.
+
+#include<bits/stdc++.h>
+using namespace std;
+ 
+const int _ = 2e7 + 7; bool nprm[_]; int prm[_ / 10] , cnt , num[_]; long long mx[_];
+ 
+int main(){
+    ios::sync_with_stdio(0);
+    for(int i = 2 ; i < _ ; ++i){
+        if(!nprm[i]){prm[++cnt] = i;}
+        for(int j = 1;  prm[j] * i < _ ; ++j){nprm[prm[j] * i] = 1; if(i % prm[j] == 0) break;}
+    }
+    int N; cin >> N;
+    for(int i = 1 ; i <= N ; ++i){int v; cin >> v; ++num[v];}
+    for(int i = 1 ; i <= cnt ; ++i) for(int j = 2e7 / prm[i] + 1e-9 ; j >= 1 ; --j) num[j] += num[prm[i] * j];
+    for(int i = 2e7 ; i ; --i){
+        mx[i] = 1ll * num[i] * i;
+        for(int j = 1 ; j <= cnt && prm[j] * i <= 2e7 ; ++j) mx[i] = max(mx[i] , mx[i * prm[j]] + 1ll * (num[i] - num[i * prm[j]]) * i);
+    }
+    cout << mx[1] << endl; return 0;
+}
+
+
+// leetcode
+class Solution {
+public:
+    int countPyramids(vector<vector<int>>& a) {
+        int n = a.size(), m = a[0].size();
+        auto solve = [&]() {
+            vector<vector<int>> dp(n, vector<int>(m));
+            int ret = 0;
+            for (int i = n - 1; i >= 0; --i) {
+                for (int j = 0; j < m; ++j) {
+                    if (a[i][j] == 0) continue;
+                    dp[i][j] = 1;
+                    if (i + 1 < n && j - 1 >= 0 && j + 1 < m) {
+                        dp[i][j] = 1 + min(min(dp[i + 1][j - 1], dp[i + 1][j]), dp[i + 1][j + 1]);
+                    }
+                    ret += dp[i][j] - 1;
+                }
+            }
+            return ret;
+        };
+        int ret = solve();
+        for (int i = 0; i < n / 2; ++i) swap(a[i], a[n - 1 - i]);
+        ret += solve();
+        return ret;
+    }
+};
+
+// dsu
+vi adj[mxn];
+int par[mxn];
+
+int gt_par(int x){
+    if(x==par[x]) return x;
+    return par[x] = gt_par(par[x]);
+}
+
+bool uni(int x,int y){
+    x = gt_par(x);
+    y = gt_par(y);
+    bool ret = x!=y;
+    par[x] = y;
+    return ret;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------------
+
+
+    
+
+
